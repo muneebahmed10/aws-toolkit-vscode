@@ -292,6 +292,13 @@ export function isReleaseVersion(): boolean {
 }
 
 /**
+ * Returns true if the current build is running on CI (build server).
+ */
+export function isCI(): boolean {
+    return undefined !== process.env['CODEBUILD_BUILD_ID']
+}
+
+/**
  * Shows a message with a link to the quickstart page.
  * In cloud9, directly opens quickstart instead
  */
