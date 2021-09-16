@@ -19,6 +19,7 @@ import { Workspace } from '../../shared/vscode/workspace'
 import { inspect } from 'util'
 import { getLogger } from '../../shared/logger'
 import { IotNode } from './iotNodes'
+import { IotThingFolderNode } from './iotThingFolderNode'
 
 /**
  * Represents an S3 bucket that may contain folders and/or objects.
@@ -28,7 +29,7 @@ export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode {
 
     public constructor(
         public readonly thing: IotThing,
-        public readonly parent: IotNode,
+        public readonly parent: IotThingFolderNode,
         public readonly iot: IotClient,
         private readonly workspace = Workspace.vscode()
     ) {

@@ -12,6 +12,7 @@ import { PlaceholderNode } from '../../shared/treeview/nodes/placeholderNode'
 import { makeChildrenNodes } from '../../shared/treeview/treeNodeUtilities'
 import { IotThingNode } from './iotThingNode'
 import { inspect } from 'util'
+import { IotThingFolderNode } from './iotThingFolderNode'
 
 /**
  * An AWS Explorer node representing S3.
@@ -27,9 +28,10 @@ export class IotNode extends AWSTreeNodeBase {
     public async getChildren(): Promise<AWSTreeNodeBase[]> {
         return await makeChildrenNodes({
             getChildNodes: async () => {
-                const response = await this.iot.listThings()
+                const categories: AWSTreeNodeBase[] = []
+                categories.push(new IotThingFolderNode(this.iot))
 
-                return response.things.map(thing => new IotThingNode(thing, this, this.iot))
+                return categories
             },
             getErrorNode: async (error: Error, logID: number) => new ErrorNode(this, error, logID),
             getNoChildrenPlaceholderNode: async () =>

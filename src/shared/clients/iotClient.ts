@@ -14,7 +14,7 @@ import { getLogger } from '../logger'
 import { DefaultFileStreams, FileStreams, pipe, promisifyReadStream } from '../utilities/streamUtilities'
 import { InterfaceNoSymbol } from '../utilities/tsUtils'
 
-export const DEFAULT_MAX_KEYS = 300
+export const DEFAULT_MAX_THINGS = 250 // 250 is the maximum allowed by the API
 export const DEFAULT_DELIMITER = '/'
 
 export type IotThing = InterfaceNoSymbol<DefaultIotThing>
@@ -25,8 +25,14 @@ interface IotObject {
     readonly versionId?: string
 }
 
+export interface ListThingsRequest {
+    readonly nextToken?: string
+    readonly maxResults?: number
+}
+
 export interface ListThingsResponse {
     readonly things: IotThing[]
+    readonly nextToken: string | undefined
 }
 
 export class DefaultIotClient {
@@ -68,11 +74,25 @@ export class DefaultIotClient {
      *
      * @throws Error if there is an error calling S3.
      */
-    public async listThings(): Promise<ListThingsResponse> {
+    public async listThings(request?: ListThingsRequest): Promise<ListThingsResponse> {
         getLogger().debug('ListBuckets called')
         const iot = await this.createIot()
 
-        const iotThings: Iot.ThingAttribute[] = await this.listAllThings()
+        let iotThings: Iot.ThingAttribute[]
+        let nextToken: Iot.NextToken | undefined
+        try {
+            const output = await iot
+                .listThings({
+                    maxResults: request?.maxResults ?? DEFAULT_MAX_THINGS,
+                    nextToken: request?.nextToken,
+                })
+                .promise()
+            iotThings = output.things ?? []
+            nextToken = output.nextToken
+        } catch (e) {
+            getLogger().error('Failed to list things: %O', e)
+            throw e
+        }
 
         // S3#ListBuckets returns buckets across all regions
         const allBucketPromises: Promise<IotThing | undefined>[] = iotThings.map(async iotThing => {
@@ -102,9 +122,9 @@ export class DefaultIotClient {
             .map(thing => thing as IotThing)
             .value()
 
-        const response: ListThingsResponse = { things: bucketsInRegion }
+        const response: ListThingsResponse = { things: bucketsInRegion, nextToken: nextToken }
         getLogger().debug('ListBuckets returned response: %O', response)
-        return { things: bucketsInRegion }
+        return { things: bucketsInRegion, nextToken: nextToken }
     }
 }
 

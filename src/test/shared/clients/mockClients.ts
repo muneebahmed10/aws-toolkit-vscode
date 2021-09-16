@@ -577,7 +577,7 @@ export class MockIotClient implements IotClient {
     public constructor({
         regionCode = '',
         listAllThings = async () => [],
-        listThings = async () => ({ things: [] }),
+        listThings = async () => ({ things: [], nextToken: undefined }),
     }: {
         regionCode?: string
         listAllThings?(): Promise<Iot.ThingAttribute[]>
