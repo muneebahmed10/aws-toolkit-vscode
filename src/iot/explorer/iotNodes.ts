@@ -20,7 +20,7 @@ import { inspect } from 'util'
  */
 export class IotNode extends AWSTreeNodeBase {
     public constructor(private readonly iot: IotClient) {
-        super('Iot', vscode.TreeItemCollapsibleState.Collapsed)
+        super('IoT', vscode.TreeItemCollapsibleState.Collapsed)
         this.contextValue = 'awsIotNode'
     }
 
@@ -31,10 +31,9 @@ export class IotNode extends AWSTreeNodeBase {
 
                 return response.things.map(thing => new IotThingNode(thing, this, this.iot))
             },
-            getErrorNode: async (error: Error, logID: number) =>
-                new ErrorNode(this, error, logID),
+            getErrorNode: async (error: Error, logID: number) => new ErrorNode(this, error, logID),
             getNoChildrenPlaceholderNode: async () =>
-                new PlaceholderNode(this, localize('AWS.explorerNode.s3.noBuckets', '[No Things found]')),
+                new PlaceholderNode(this, localize('AWS.explorerNode.iot.noThings', '[No Things found]')),
         })
     }
 

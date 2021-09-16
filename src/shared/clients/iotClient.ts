@@ -29,12 +29,10 @@ export interface ListThingsResponse {
     readonly things: IotThing[]
 }
 
-
 export class DefaultIotClient {
     public constructor(
-        private readonly partitionId: string,
         private readonly regionCode: string,
-        private readonly iotProvider: (regionCode: string) => Promise<Iot> = createSdkClient,
+        private readonly iotProvider: (regionCode: string) => Promise<Iot> = createSdkClient
     ) {}
 
     private async createIot(): Promise<Iot> {
@@ -51,7 +49,7 @@ export class DefaultIotClient {
         const iot = await this.createIot()
 
         let iotThings: Iot.ThingAttribute[]
-        try{
+        try {
             const output = await iot.listThings().promise()
             iotThings = output.things ?? []
         } catch (e) {
@@ -91,7 +89,6 @@ export class DefaultIotClient {
                 return undefined
             }
             return new DefaultIotThing({
-                partitionId: this.partitionId,
                 region: region,
                 name: bucketName,
                 arn: thingArn,
@@ -116,7 +113,7 @@ export class DefaultIotThing {
     public readonly region: string
     public readonly arn: string
 
-    public constructor({ partitionId, region, name, arn }: { partitionId: string; region: string; name: string; arn: string }) {
+    public constructor({ region, name, arn }: { region: string; name: string; arn: string }) {
         this.name = name
         this.region = region
         this.arn = arn

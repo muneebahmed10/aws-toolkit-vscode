@@ -79,6 +79,6 @@ export class DefaultToolkitClientBuilder {
     }
 
     public createIotClient(regionCode: string): IotClient {
-        return new DefaultIotClient(this.regionProvider.getPartitionId(regionCode) ?? DEFAULT_PARTITION, regionCode)
+        return new DefaultIotClient(regionCode)
     }
 }
