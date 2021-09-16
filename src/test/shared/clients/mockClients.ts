@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { AppRunner, S3 } from 'aws-sdk'
-import { APIGateway, CloudFormation, CloudWatchLogs, IAM, Lambda, Schemas, StepFunctions, STS, SSM } from 'aws-sdk'
+import { APIGateway, CloudFormation, CloudWatchLogs, IAM, Lambda, Schemas, StepFunctions, STS, SSM, Iot } from 'aws-sdk'
 import { ApiGatewayClient } from '../../../shared/clients/apiGatewayClient'
 import { CloudFormationClient } from '../../../shared/clients/cloudFormationClient'
 import { CloudWatchLogsClient } from '../../../shared/clients/cloudWatchLogsClient'
@@ -15,6 +15,7 @@ import { SchemaClient } from '../../../shared/clients/schemaClient'
 import { StepFunctionsClient } from '../../../shared/clients/stepFunctionsClient'
 import { StsClient } from '../../../shared/clients/stsClient'
 import { SsmDocumentClient } from '../../../shared/clients/ssmDocumentClient'
+import { IotClient, ListThingsResponse } from '../../../shared/clients/iotClient'
 import { ToolkitClientBuilder } from '../../../shared/clients/toolkitClientBuilder'
 
 import '../../../shared/utilities/asyncIteratorShim'
@@ -52,6 +53,7 @@ interface Clients {
     stepFunctionsClient: StepFunctionsClient
     stsClient: StsClient
     s3Client: S3Client
+    iotClient: IotClient
     ssmDocumentClient: SsmDocumentClient
     apprunnerClient: AppRunnerClient
 }
@@ -71,6 +73,7 @@ export class MockToolkitClientBuilder implements ToolkitClientBuilder {
             stepFunctionsClient: new MockStepFunctionsClient(),
             stsClient: new MockStsClient({}),
             s3Client: new MockS3Client({}),
+            iotClient: new MockIotClient({}),
             ssmDocumentClient: new MockSsmDocumentClient(),
             apprunnerClient: new MockAppRunnerClient(),
             ...overrideClients,
@@ -127,6 +130,10 @@ export class MockToolkitClientBuilder implements ToolkitClientBuilder {
 
     public createSsmClient(regionCode: string): SsmDocumentClient {
         return this.clients.ssmDocumentClient
+    }
+
+    public createIotClient(regionCode: string): IotClient {
+        return this.clients.iotClient
     }
 }
 
@@ -558,6 +565,27 @@ export class MockS3Client implements S3Client {
         this.deleteObject = deleteObject
         this.deleteObjects = deleteObjects
         this.deleteBucket = deleteBucket
+    }
+}
+
+export class MockIotClient implements IotClient {
+    public readonly regionCode: string
+
+    public readonly listAllThings: () => Promise<Iot.ThingAttribute[]>
+    public readonly listThings: () => Promise<ListThingsResponse>
+
+    public constructor({
+        regionCode = '',
+        listAllThings = async () => [],
+        listThings = async () => ({ things: [] }),
+    }: {
+        regionCode?: string
+        listAllThings?(): Promise<Iot.ThingAttribute[]>
+        listThings?(): Promise<ListThingsResponse>
+    }) {
+        this.regionCode = regionCode
+        this.listAllThings = listAllThings
+        this.listThings = listThings
     }
 }
 

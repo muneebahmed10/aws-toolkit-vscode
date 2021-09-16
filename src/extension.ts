@@ -64,6 +64,7 @@ import { activate as activateApiGateway } from './apigateway/activation'
 import { activate as activateStepFunctions } from './stepFunctions/activation'
 import { activate as activateSsmDocument } from './ssmDocument/activation'
 import { activate as activateAppRunner } from './apprunner/activation'
+import { activate as activateIot } from './iot/activation'
 import { CredentialsStore } from './credentials/credentialsStore'
 import { getSamCliContext } from './shared/sam/cli/samCliContext'
 import * as extWindow from './shared/vscode/window'
@@ -236,6 +237,11 @@ export async function activate(context: vscode.ExtensionContext) {
         await activateEcr(context)
 
         await activateCloudWatchLogs(context, toolkitSettings)
+
+        await activateIot({
+            extContext: extContext,
+            outputChannel: remoteInvokeOutputChannel,
+        })
 
         // Features which aren't currently functional in Cloud9
         if (!isCloud9()) {
