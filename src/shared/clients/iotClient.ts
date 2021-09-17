@@ -26,13 +26,21 @@ interface IotObject {
 }
 
 export interface ListThingsRequest {
-    readonly nextToken?: string
-    readonly maxResults?: number
+    readonly nextToken?: Iot.NextToken
+    readonly maxResults?: Iot.MaxResults
 }
 
 export interface ListThingsResponse {
     readonly things: IotThing[]
     readonly nextToken: string | undefined
+}
+
+export interface UpdateThingRequest {
+    readonly thingName: Iot.ThingName
+}
+
+export interface CreateThingResponse {
+    readonly thing: IotThing
 }
 
 export class DefaultIotClient {
@@ -75,7 +83,7 @@ export class DefaultIotClient {
      * @throws Error if there is an error calling S3.
      */
     public async listThings(request?: ListThingsRequest): Promise<ListThingsResponse> {
-        getLogger().debug('ListBuckets called')
+        getLogger().debug('ListThings called with request: %O', request)
         const iot = await this.createIot()
 
         let iotThings: Iot.ThingAttribute[]
@@ -125,6 +133,63 @@ export class DefaultIotClient {
         const response: ListThingsResponse = { things: bucketsInRegion, nextToken: nextToken }
         getLogger().debug('ListBuckets returned response: %O', response)
         return { things: bucketsInRegion, nextToken: nextToken }
+    }
+
+    /**
+     * Creates an IoT Thing.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async createThing(request: UpdateThingRequest): Promise<CreateThingResponse> {
+        getLogger().debug('CreateBucket called with request: %O', request)
+        const iot = await this.createIot()
+
+        let thingArn: Iot.ThingArn
+        let thingName: Iot.ThingName
+        let thingId: Iot.ThingId
+        try {
+            const output = await iot.createThing({ thingName: request.thingName }).promise()
+
+            if (output.thingArn) {
+                thingArn = output.thingArn
+            } else {
+                throw new Error('Thing ARN not found')
+            }
+
+            //thingArn = output.thingArn ?? throw new Error('thingArn not found')
+        } catch (e) {
+            getLogger().error('Failed to create Thing: %s: %O', request.thingName, e)
+            throw e
+        }
+
+        const response: CreateThingResponse = {
+            thing: new DefaultIotThing({
+                name: request.thingName,
+                region: this.regionCode,
+                arn: thingArn,
+            }),
+        }
+        getLogger().debug('CreateThing returned response: %O', response)
+        return response
+    }
+
+    /**
+     * Deletes an IoT Thing.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async deleteThing(request: UpdateThingRequest): Promise<void> {
+        getLogger().debug('DeleteThing called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot.deleteThing({ thingName: request.thingName }).promise()
+        } catch (e) {
+            getLogger().error('Failed to delete Thing: %O', e)
+            throw e
+        }
+
+        getLogger().debug('DeleteThing successful')
     }
 }
 

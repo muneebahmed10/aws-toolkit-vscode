@@ -15,7 +15,7 @@ import { SchemaClient } from '../../../shared/clients/schemaClient'
 import { StepFunctionsClient } from '../../../shared/clients/stepFunctionsClient'
 import { StsClient } from '../../../shared/clients/stsClient'
 import { SsmDocumentClient } from '../../../shared/clients/ssmDocumentClient'
-import { IotClient, ListThingsResponse } from '../../../shared/clients/iotClient'
+import { IotClient, ListThingsResponse, CreateThingResponse } from '../../../shared/clients/iotClient'
 import { ToolkitClientBuilder } from '../../../shared/clients/toolkitClientBuilder'
 
 import '../../../shared/utilities/asyncIteratorShim'
@@ -40,6 +40,7 @@ import {
     SignedUrlRequest,
 } from '../../../shared/clients/s3Client'
 import { AppRunnerClient } from '../../../shared/clients/apprunnerClient'
+import { UpdateThingRequest } from 'aws-sdk/clients/iot'
 
 interface Clients {
     apiGatewayClient: ApiGatewayClient
@@ -573,19 +574,27 @@ export class MockIotClient implements IotClient {
 
     public readonly listAllThings: () => Promise<Iot.ThingAttribute[]>
     public readonly listThings: () => Promise<ListThingsResponse>
+    public readonly createThing: (request: UpdateThingRequest) => Promise<CreateThingResponse>
+    public readonly deleteThing: (request: UpdateThingRequest) => Promise<void>
 
     public constructor({
         regionCode = '',
         listAllThings = async () => [],
         listThings = async () => ({ things: [], nextToken: undefined }),
+        createThing = async (request: UpdateThingRequest) => ({ thing: { name: '', region: '', arn: '' } }),
+        deleteThing = async (request: UpdateThingRequest) => {},
     }: {
         regionCode?: string
         listAllThings?(): Promise<Iot.ThingAttribute[]>
         listThings?(): Promise<ListThingsResponse>
+        createThing?(request: UpdateThingRequest): Promise<CreateThingResponse>
+        deleteThing?(request: UpdateThingRequest): Promise<void>
     }) {
         this.regionCode = regionCode
         this.listAllThings = listAllThings
         this.listThings = listThings
+        this.createThing = createThing
+        this.deleteThing = deleteThing
     }
 }
 

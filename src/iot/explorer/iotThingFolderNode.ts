@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode'
-import { IotThing, IotClient } from '../../shared/clients/iotClient'
+import { IotThing, IotClient, UpdateThingRequest, CreateThingResponse } from '../../shared/clients/iotClient'
 import { AWSTreeNodeBase } from '../../shared/treeview/nodes/awsTreeNodeBase'
 import { ErrorNode } from '../../shared/treeview/nodes/errorNode'
 import { LoadMoreNode } from '../../shared/treeview/nodes/loadMoreNode'
@@ -68,6 +68,13 @@ export class IotThingFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
             newContinuationToken: response.nextToken ?? undefined,
             newChildren: [...newThings],
         }
+    }
+
+    /**
+     * See {@link IotClient.createThing}
+     */
+    public async createThing(request: UpdateThingRequest): Promise<CreateThingResponse> {
+        return this.iot.createThing(request)
     }
 
     public [inspect.custom](): string {

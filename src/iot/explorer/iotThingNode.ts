@@ -42,6 +42,13 @@ export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode {
         this.contextValue = 'awsIotThingNode'
     }
 
+    /**
+     * See {@link IotClient.deleteThing}
+     */
+    public async deleteThing(): Promise<void> {
+        await this.iot.deleteThing({ thingName: this.thing.name })
+    }
+
     public get arn(): string {
         return this.thing.arn
     }
