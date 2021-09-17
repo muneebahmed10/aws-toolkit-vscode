@@ -193,6 +193,7 @@
     "AWS.command.quickStart": "View Quick Start",
     "AWS.command.quickStart.title": "AWS Toolkit - Quick Start",
     "AWS.command.quickStart.error": "There was an error retrieving the Quick Start page",
+    "AWS.command.iot.createThing": "Create Thing...",
     "AWS.command.s3.downloadFileAs": "Download As...",
     "AWS.command.s3.copyPath": "Copy Path",
     "AWS.command.s3.presignedURL": "Generate Presigned URL...",

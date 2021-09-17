@@ -41,12 +41,12 @@ export async function createThingCommand(
         const thing = await node.createThing({ thingName })
 
         getLogger().info('Created thing: %O', thing)
-        window.showInformationMessage(localize('AWS.s3.createBucket.success', 'Created thing: {0}', thingName))
+        window.showInformationMessage(localize('AWS.s3.createBucket.success', 'Created Thing: {0}', thingName))
         //telemetry.recordS3CreateBucket({ result: 'Succeeded' })
     } catch (e) {
-        getLogger().error(`Failed to create bucket ${thingName}: %O`, e)
+        getLogger().error(`Failed to create Thing ${thingName}: %O`, e)
         showViewLogsMessage(
-            localize('AWS.s3.createBucket.error.general', 'Failed to create bucket: {0}', thingName),
+            localize('AWS.s3.createBucket.error.general', 'Failed to create Thing: {0}', thingName),
             window
         )
         //telemetry.recordS3CreateBucket({ result: 'Failed' })
@@ -56,5 +56,6 @@ export async function createThingCommand(
 }
 
 async function refreshNode(node: IotThingFolderNode, commands: Commands): Promise<void> {
+    node.clearChildren()
     return commands.execute('aws.refreshAwsExplorerNode', node)
 }
