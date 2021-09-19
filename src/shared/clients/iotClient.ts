@@ -18,7 +18,11 @@ export const DEFAULT_MAX_THINGS = 250 // 250 is the maximum allowed by the API
 export const DEFAULT_DELIMITER = '/'
 
 export type IotThing = InterfaceNoSymbol<DefaultIotThing>
+export type IotCertificate = InterfaceNoSymbol<DefaultIotCertificate>
 export type IotClient = InterfaceNoSymbol<DefaultIotClient>
+
+//ARN Pattern for certificates. FIXME import @aws-sdk/util-arn-parser instead.
+const CERT_ARN_PATTERN = /arn:aws:iot:\S+?:\d+:cert\/(\w+)/
 
 interface IotObject {
     readonly key: string
@@ -41,6 +45,33 @@ export interface UpdateThingRequest {
 
 export interface CreateThingResponse {
     readonly thing: IotThing
+}
+
+export interface ListCertificatesRequest {
+    readonly pageSize?: Iot.PageSize
+    readonly marker?: Iot.Marker
+    readonly ascendingOrder?: Iot.AscendingOrder
+}
+
+export interface ListCertificatesResponse {
+    readonly certificates: IotCertificate[]
+    readonly nextMarker: string | undefined
+}
+
+export interface ListThingCertificatesRequest {
+    readonly thingName: Iot.ThingName
+    readonly nextToken?: Iot.NextToken
+    readonly maxResults?: Iot.MaxResults
+}
+
+export interface ListThingCertificatesResponse {
+    readonly certificates: IotCertificate[]
+    readonly nextToken: string | undefined
+}
+
+export interface UpdateCertificateRequest {
+    readonly certificateId: Iot.CertificateId
+    readonly newStatus: Iot.CertificateStatus
 }
 
 export class DefaultIotClient {
@@ -74,13 +105,9 @@ export class DefaultIotClient {
     }
 
     /**
-     * Lists things in the region of the client.
+     * Lists Things in the region of the client.
      *
-     * Note that S3 returns all buckets in all regions,
-     * so this incurs the cost of additional S3#getBucketLocation requests for each bucket
-     * to filter out buckets residing outside of the client's region.
-     *
-     * @throws Error if there is an error calling S3.
+     * @throws Error if there is an error calling IoT.
      */
     public async listThings(request?: ListThingsRequest): Promise<ListThingsResponse> {
         getLogger().debug('ListThings called with request: %O', request)
@@ -103,7 +130,7 @@ export class DefaultIotClient {
         }
 
         // S3#ListBuckets returns buckets across all regions
-        const allBucketPromises: Promise<IotThing | undefined>[] = iotThings.map(async iotThing => {
+        const allThingPromises: Promise<IotThing | undefined>[] = iotThings.map(async iotThing => {
             const bucketName = iotThing.thingName
             const thingArn = iotThing.thingArn
             if (!bucketName) {
@@ -123,16 +150,16 @@ export class DefaultIotClient {
             })
         })
 
-        const allBuckets = await Promise.all(allBucketPromises)
-        const bucketsInRegion = _(allBuckets)
+        const allThings = await Promise.all(allThingPromises)
+        const filteredThings = _(allThings)
             .reject(thing => thing === undefined)
             // we don't have a filerNotNull so we can filter then cast
             .map(thing => thing as IotThing)
             .value()
 
-        const response: ListThingsResponse = { things: bucketsInRegion, nextToken: nextToken }
-        getLogger().debug('ListBuckets returned response: %O', response)
-        return { things: bucketsInRegion, nextToken: nextToken }
+        const response: ListThingsResponse = { things: filteredThings, nextToken: nextToken }
+        getLogger().debug('ListThings returned response: %O', response)
+        return { things: filteredThings, nextToken: nextToken }
     }
 
     /**
@@ -191,6 +218,149 @@ export class DefaultIotClient {
 
         getLogger().debug('DeleteThing successful')
     }
+
+    /**
+     * Lists all IoT certificates in account.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async listCertificates(request: ListCertificatesRequest): Promise<ListCertificatesResponse> {
+        getLogger().debug('ListCertificates called with request: %O', request)
+        const iot = await this.createIot()
+
+        let iotCerts: Iot.Certificate[]
+        let nextMarker: Iot.Marker | undefined
+        try {
+            const output = await iot
+                .listCertificates({
+                    pageSize: request.pageSize ?? DEFAULT_MAX_THINGS,
+                    marker: request.marker,
+                    ascendingOrder: request.ascendingOrder,
+                })
+                .promise()
+            iotCerts = output.certificates ?? []
+            nextMarker = output.nextMarker
+        } catch (e) {
+            getLogger().error('Failed to retrieve certificates: %O', e)
+            throw e
+        }
+
+        const allCertsPromises: Promise<IotCertificate | undefined>[] = iotCerts.map(async iotCert => {
+            const certId = iotCert.certificateId
+            const certArn = iotCert.certificateArn
+            const certStatus = iotCert.status
+            const certDate = iotCert.creationDate
+            if (!certId || !certArn || !certStatus || !certDate) {
+                return undefined
+            }
+            return new DefaultIotCertificate({
+                arn: certArn,
+                id: certId,
+                activeStatus: certStatus,
+                creationDate: certDate,
+            })
+        })
+
+        const allCerts = await Promise.all(allCertsPromises)
+        const certs = _(allCerts)
+            .reject(cert => cert === undefined)
+            .map(cert => cert as IotCertificate)
+            .value()
+
+        const response: ListCertificatesResponse = { certificates: certs, nextMarker: nextMarker }
+        getLogger().debug('ListCertificates returned response: %O', response)
+        return { certificates: certs, nextMarker: nextMarker }
+    }
+
+    public async listThingCertificates(request: ListThingCertificatesRequest): Promise<ListThingCertificatesResponse> {
+        getLogger().debug('ListThingCertificates called with request: %O', request)
+        const iot = await this.createIot()
+
+        let iotCerts: Iot.Certificate[]
+        let iotPrincipals: Iot.Principal[]
+        let nextToken: Iot.NextToken | undefined
+        try {
+            const output = await iot
+                .listThingPrincipals({
+                    thingName: request.thingName,
+                    maxResults: request.maxResults ?? DEFAULT_MAX_THINGS,
+                    nextToken: request.nextToken,
+                })
+                .promise()
+            iotPrincipals = output.principals ?? []
+            nextToken = output.nextToken
+        } catch (e) {
+            getLogger().error('Failed to list thing principals: %O', e)
+            throw e
+        }
+
+        const allCertPromises: Promise<IotCertificate | undefined>[] = iotPrincipals.map(async iotPrincipal => {
+            const certIdFound = iotPrincipal.match(CERT_ARN_PATTERN)
+            if (!certIdFound) {
+                return undefined
+            }
+            const certId = certIdFound[1]
+            let activationStatus: string | undefined
+            let certDate: Iot.CreationDate | undefined
+
+            //Make a request to get the status of the certificate
+            try {
+                const certificate = await iot
+                    .describeCertificate({
+                        certificateId: certId,
+                    })
+                    .promise()
+                activationStatus = certificate.certificateDescription?.status
+                certDate = certificate.certificateDescription?.creationDate
+            } catch (e) {
+                getLogger().error('Failed to describe thing certificate: %O', e)
+                throw e
+            }
+
+            if (!activationStatus || !certDate) {
+                return undefined
+            }
+
+            return new DefaultIotCertificate({
+                arn: iotPrincipal,
+                id: certId,
+                activeStatus: activationStatus,
+                creationDate: certDate,
+            })
+        })
+
+        const allCerts = await Promise.all(allCertPromises)
+        const filteredCerts = _(allCerts)
+            .reject(cert => cert === undefined)
+            // we don't have a filerNotNull so we can filter then cast
+            .map(cert => cert as IotCertificate)
+            .value()
+
+        const response: ListThingCertificatesResponse = { certificates: filteredCerts, nextToken: nextToken }
+        getLogger().debug('ListThingCertificates returned response: %O', response)
+        return { certificates: filteredCerts, nextToken: nextToken }
+    }
+
+    /**
+     * Activates, deactivates, or revokes an IoT Certificate.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async updateCertificate(request: UpdateCertificateRequest): Promise<void> {
+        getLogger().debug('UpdateCertificate called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot
+                .updateCertificate({ certificateId: request.certificateId, newStatus: request.newStatus })
+                .promise()
+        } catch (e) {
+            getLogger().error('Failed to update certificate: %O', e)
+            throw e
+        }
+
+        getLogger().debug('UpdateCertificate successful')
+    }
 }
 
 export class DefaultIotThing {
@@ -206,6 +376,34 @@ export class DefaultIotThing {
 
     public [inspect.custom](): string {
         return `Thing (name=${this.name}, region=${this.region}, arn=${this.arn})`
+    }
+}
+
+export class DefaultIotCertificate {
+    public readonly id: string
+    public readonly arn: string
+    public readonly activeStatus: string
+    public readonly creationDate: Date
+
+    public constructor({
+        arn,
+        id,
+        activeStatus,
+        creationDate,
+    }: {
+        arn: string
+        id: string
+        activeStatus: string
+        creationDate: Date
+    }) {
+        this.id = id
+        this.arn = arn
+        this.activeStatus = activeStatus
+        this.creationDate = creationDate
+    }
+
+    public [inspect.custom](): string {
+        return `Certificate (id=${this.id}, arn=${this.arn}, status=${this.activeStatus})`
     }
 }
 

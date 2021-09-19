@@ -20,12 +20,13 @@ import { inspect } from 'util'
 import { getLogger } from '../../shared/logger'
 import { IotNode } from './iotNodes'
 import { IotThingFolderNode } from './iotThingFolderNode'
+import { IotCertificateNode } from './iotCertificateNode'
 
 /**
- * Represents an S3 bucket that may contain folders and/or objects.
+ * Represents an IoT Thing that may have attached certificates.
  */
-export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode {
-    //private readonly childLoader: ChildNodeLoader
+export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode, LoadMoreNode {
+    private readonly childLoader: ChildNodeLoader
 
     public constructor(
         public readonly thing: IotThing,
@@ -40,6 +41,47 @@ export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode {
         //     light: vscode.Uri.file(ext.iconPaths.light.s3),
         // }
         this.contextValue = 'awsIotThingNode'
+        this.childLoader = new ChildNodeLoader(this, token => this.loadPage(token))
+    }
+
+    public async getChildren(): Promise<AWSTreeNodeBase[]> {
+        return await makeChildrenNodes({
+            getChildNodes: async () => this.childLoader.getChildren(),
+            getErrorNode: async (error: Error, logID: number) => new ErrorNode(this, error, logID),
+            getNoChildrenPlaceholderNode: async () =>
+                new PlaceholderNode(this, localize('AWS.explorerNode.iot.noCerts', '[No Certificates found]')),
+        })
+    }
+
+    public async loadMoreChildren(): Promise<void> {
+        await this.childLoader.loadMoreChildren()
+    }
+
+    public isLoadingMoreChildren(): boolean {
+        return this.childLoader.isLoadingMoreChildren()
+    }
+
+    public clearChildren(): void {
+        this.childLoader.clearChildren()
+    }
+
+    private async loadPage(continuationToken: string | undefined): Promise<ChildNodePage> {
+        getLogger().debug(`Loading page for %O using continuationToken %s`, this, continuationToken)
+        const response = await this.iot.listThingCertificates({
+            thingName: this.thing.name,
+            nextToken: continuationToken,
+            maxResults: this.getMaxItemsPerPage(),
+        })
+
+        const newCerts = response.certificates.map(
+            cert => new IotCertificateNode(cert, this, this.iot, vscode.TreeItemCollapsibleState.None)
+        )
+
+        getLogger().debug(`Loaded certificates: %O`, newCerts)
+        return {
+            newContinuationToken: response.nextToken ?? undefined,
+            newChildren: [...newCerts],
+        }
     }
 
     /**
@@ -59,5 +101,9 @@ export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode {
 
     public [inspect.custom](): string {
         return `IotThingNode (thing=${this.thing.name})`
+    }
+
+    private getMaxItemsPerPage(): number | undefined {
+        return this.workspace.getConfiguration('aws').get<number>('iot.maxItemsPerPage')
     }
 }

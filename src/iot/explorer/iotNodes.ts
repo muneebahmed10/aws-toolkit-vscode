@@ -13,6 +13,7 @@ import { makeChildrenNodes } from '../../shared/treeview/treeNodeUtilities'
 import { IotThingNode } from './iotThingNode'
 import { inspect } from 'util'
 import { IotThingFolderNode } from './iotThingFolderNode'
+import { IotCertsFolderNode } from './iotCertFolderNode'
 
 /**
  * An AWS Explorer node representing S3.
@@ -30,6 +31,7 @@ export class IotNode extends AWSTreeNodeBase {
             getChildNodes: async () => {
                 const categories: AWSTreeNodeBase[] = []
                 categories.push(new IotThingFolderNode(this.iot))
+                categories.push(new IotCertsFolderNode(this.iot))
 
                 return categories
             },
