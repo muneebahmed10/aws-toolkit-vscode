@@ -13,7 +13,6 @@ import { makeChildrenNodes } from '../../shared/treeview/treeNodeUtilities'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { ChildNodeLoader } from '../../awsexplorer/childNodeLoader'
 import { ChildNodePage } from '../../awsexplorer/childNodeLoader'
-import { folderIconPath } from '../../shared/utilities/vsCodeUtils'
 import { IotThingNode } from './iotThingNode'
 import { inspect } from 'util'
 import { Workspace } from '../../shared/vscode/workspace'
@@ -26,9 +25,8 @@ export class IotThingFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
     private readonly childLoader: ChildNodeLoader
 
     public constructor(public readonly iot: IotClient, private readonly workspace = Workspace.vscode()) {
-        super('IoT Things', vscode.TreeItemCollapsibleState.Collapsed)
+        super('Things', vscode.TreeItemCollapsibleState.Collapsed)
         this.tooltip = 'IoT Things'
-        this.iconPath = folderIconPath()
         this.contextValue = 'awsIotThingsNode'
         this.childLoader = new ChildNodeLoader(this, token => this.loadPage(token))
     }

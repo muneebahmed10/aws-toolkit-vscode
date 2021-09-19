@@ -25,7 +25,7 @@ export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
     private readonly childLoader: ChildNodeLoader
 
     public constructor(public readonly iot: IotClient, private readonly workspace = Workspace.vscode()) {
-        super('IoT Certificates', vscode.TreeItemCollapsibleState.Collapsed)
+        super('Certificates', vscode.TreeItemCollapsibleState.Collapsed)
         this.tooltip = 'IoT Certificates'
         this.contextValue = 'awsIotCertsNode'
         this.childLoader = new ChildNodeLoader(this, token => this.loadPage(token))

@@ -25,7 +25,7 @@ export class IotPolicyFolderNode extends AWSTreeNodeBase implements LoadMoreNode
     private readonly childLoader: ChildNodeLoader
 
     public constructor(public readonly iot: IotClient, private readonly workspace = Workspace.vscode()) {
-        super('IoT Policies', vscode.TreeItemCollapsibleState.Collapsed)
+        super('Policies', vscode.TreeItemCollapsibleState.Collapsed)
         this.tooltip = 'IoT Policies'
         this.contextValue = 'awsIotPoliciesNode'
         this.childLoader = new ChildNodeLoader(this, token => this.loadPage(token))
