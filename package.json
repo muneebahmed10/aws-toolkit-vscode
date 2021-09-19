@@ -962,6 +962,16 @@
                     "group": "inline@1"
                 },
                 {
+                    "command": "aws.iot.createThing",
+                    "when": "view == aws.explorer && viewItem == awsIotThingsNode",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "aws.iot.deleteThing",
+                    "when": "view == aws.explorer && viewItem == awsIotThingNode",
+                    "group": "inline@1"
+                },
+                {
                     "command": "aws.s3.downloadFileAs",
                     "when": "view == aws.explorer && viewItem == awsS3FileNode",
                     "group": "inline@1"
@@ -1118,12 +1128,12 @@
                 },
                 {
                     "command": "aws.copyName",
-                    "when": "view == aws.explorer && viewItem =~ /^(awsRegionFunctionNode|awsRegionFunctionNodeDownloadable|awsCloudFormationFunctionNode|awsStateMachineNode|awsCloudFormationNode|awsS3BucketNode|awsS3FolderNode|awsS3FileNode|awsApiGatewayNode|awsIotThingNode)$|^(awsAppRunnerServiceNode|awsIotCertificateNode)/",
+                    "when": "view == aws.explorer && viewItem =~ /^(awsRegionFunctionNode|awsRegionFunctionNodeDownloadable|awsCloudFormationFunctionNode|awsStateMachineNode|awsCloudFormationNode|awsS3BucketNode|awsS3FolderNode|awsS3FileNode|awsApiGatewayNode|awsIotThingNode|awsIotPolicyNode)$|^(awsAppRunnerServiceNode|awsIotCertificateNode)/",
                     "group": "2@1"
                 },
                 {
                     "command": "aws.copyArn",
-                    "when": "view == aws.explorer && viewItem =~ /^(awsRegionFunctionNode|awsRegionFunctionNodeDownloadable|awsCloudFormationFunctionNode|awsStateMachineNode|awsCloudFormationNode|awsCloudWatchLogNode|awsS3BucketNode|awsS3FolderNode|awsS3FileNode|awsApiGatewayNode|awsEcrRepositoryNode|awsIotThingNode)$|^(awsAppRunnerServiceNode|awsIotCertificateNode)/",
+                    "when": "view == aws.explorer && viewItem =~ /^(awsRegionFunctionNode|awsRegionFunctionNodeDownloadable|awsCloudFormationFunctionNode|awsStateMachineNode|awsCloudFormationNode|awsCloudWatchLogNode|awsS3BucketNode|awsS3FolderNode|awsS3FileNode|awsApiGatewayNode|awsEcrRepositoryNode|awsIotThingNode|awsIotPolicyNode)$|^(awsAppRunnerServiceNode|awsIotCertificateNode)/",
                     "group": "2@2"
                 },
                 {
@@ -1414,6 +1424,10 @@
                 "command": "aws.iot.createThing",
                 "title": "%AWS.command.iot.createThing%",
                 "category": "%AWS.title%",
+                "icon": {
+                    "light": "resources/light/plus.svg",
+                    "dark": "resources/dark/plus.svg"
+                },
                 "cloud9": {
                     "cn": {
                         "category": "%AWS.title.cn%"
@@ -1424,6 +1438,10 @@
                 "command": "aws.iot.deleteThing",
                 "title": "%AWS.generic.promptDelete%",
                 "category": "%AWS.title%",
+                "icon": {
+                    "light": "resources/light/exit.svg",
+                    "dark": "resources/dark/exit.svg"
+                },
                 "cloud9": {
                     "cn": {
                         "category": "%AWS.title.cn%"

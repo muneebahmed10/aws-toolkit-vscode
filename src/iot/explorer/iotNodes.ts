@@ -14,6 +14,7 @@ import { IotThingNode } from './iotThingNode'
 import { inspect } from 'util'
 import { IotThingFolderNode } from './iotThingFolderNode'
 import { IotCertsFolderNode } from './iotCertFolderNode'
+import { IotPolicyFolderNode } from './iotPolicyFolderNode'
 
 /**
  * An AWS Explorer node representing S3.
@@ -32,6 +33,7 @@ export class IotNode extends AWSTreeNodeBase {
                 const categories: AWSTreeNodeBase[] = []
                 categories.push(new IotThingFolderNode(this.iot))
                 categories.push(new IotCertsFolderNode(this.iot))
+                categories.push(new IotPolicyFolderNode(this.iot))
 
                 return categories
             },

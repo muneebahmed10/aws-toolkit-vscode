@@ -26,8 +26,8 @@ export async function createThingCommand(
     getLogger().debug('CreateThing called for: %O', node)
 
     const thingName = await window.showInputBox({
-        prompt: localize('AWS.s3.createBucket.prompt', 'Enter a new bucket name'),
-        placeHolder: localize('AWS.s3.createBucket.placeHolder', 'Bucket Name'),
+        prompt: localize('AWS.s3.creatThing.prompt', 'Enter a new Thing name'),
+        placeHolder: localize('AWS.s3.createThing.placeHolder', 'Thing Name'),
     })
 
     if (!thingName) {

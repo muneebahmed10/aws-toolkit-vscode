@@ -19,6 +19,7 @@ export const DEFAULT_DELIMITER = '/'
 
 export type IotThing = InterfaceNoSymbol<DefaultIotThing>
 export type IotCertificate = InterfaceNoSymbol<DefaultIotCertificate>
+export type IotPolicy = InterfaceNoSymbol<DefaultIotPolicy>
 export type IotClient = InterfaceNoSymbol<DefaultIotClient>
 
 //ARN Pattern for certificates. FIXME import @aws-sdk/util-arn-parser instead.
@@ -72,6 +73,18 @@ export interface ListThingCertificatesResponse {
 export interface UpdateCertificateRequest {
     readonly certificateId: Iot.CertificateId
     readonly newStatus: Iot.CertificateStatus
+}
+
+export interface ListPoliciesRequest {
+    readonly principal?: Iot.Principal
+    readonly pageSize?: Iot.PageSize
+    readonly marker?: Iot.Marker
+    readonly ascendingOrder?: Iot.AscendingOrder
+}
+
+export interface ListPoliciesResponse {
+    readonly policies: IotPolicy[]
+    readonly nextMarker: string | undefined
 }
 
 export class DefaultIotClient {
@@ -172,7 +185,6 @@ export class DefaultIotClient {
         const iot = await this.createIot()
 
         let thingArn: Iot.ThingArn
-        let thingName: Iot.ThingName
         let thingId: Iot.ThingId
         try {
             const output = await iot.createThing({ thingName: request.thingName }).promise()
@@ -276,7 +288,6 @@ export class DefaultIotClient {
         getLogger().debug('ListThingCertificates called with request: %O', request)
         const iot = await this.createIot()
 
-        let iotCerts: Iot.Certificate[]
         let iotPrincipals: Iot.Principal[]
         let nextToken: Iot.NextToken | undefined
         try {
@@ -361,6 +372,65 @@ export class DefaultIotClient {
 
         getLogger().debug('UpdateCertificate successful')
     }
+
+    /**
+     * Lists IoT policies for principal, or all policies if principal is absent.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async listPolicies(request: ListPoliciesRequest): Promise<ListPoliciesResponse> {
+        getLogger().debug('ListPolicies called with request: %O', request)
+        const iot = await this.createIot()
+
+        let iotPolicies: Iot.Policy[]
+        let nextMarker: Iot.Marker | undefined
+        try {
+            const output = request.principal
+                ? await iot
+                      .listPrincipalPolicies({
+                          principal: request.principal,
+                          pageSize: request.pageSize ?? DEFAULT_MAX_THINGS,
+                          marker: request.marker,
+                          ascendingOrder: request.ascendingOrder,
+                      })
+                      .promise()
+                : await iot
+                      .listPolicies({
+                          pageSize: request.pageSize ?? DEFAULT_MAX_THINGS,
+                          marker: request.marker,
+                          ascendingOrder: request.ascendingOrder,
+                      })
+                      .promise()
+
+            iotPolicies = output.policies ?? []
+            nextMarker = output.nextMarker
+        } catch (e) {
+            getLogger().error('Failed to retrieve policies: %O', e)
+            throw e
+        }
+
+        const allPoliciesPromises: Promise<IotPolicy | undefined>[] = iotPolicies.map(async iotPolicy => {
+            const policyName = iotPolicy.policyName
+            const policyArn = iotPolicy.policyArn
+            if (!policyName || !policyArn) {
+                return undefined
+            }
+            return new DefaultIotPolicy({
+                arn: policyArn,
+                name: policyName,
+            })
+        })
+
+        const allPolicies = await Promise.all(allPoliciesPromises)
+        const policies = _(allPolicies)
+            .reject(policy => policy === undefined)
+            .map(policy => policy as IotPolicy)
+            .value()
+
+        const response: ListPoliciesResponse = { policies: policies, nextMarker: nextMarker }
+        getLogger().debug('ListCertificates returned response: %O', response)
+        return { policies: policies, nextMarker: nextMarker }
+    }
 }
 
 export class DefaultIotThing {
@@ -404,6 +474,42 @@ export class DefaultIotCertificate {
 
     public [inspect.custom](): string {
         return `Certificate (id=${this.id}, arn=${this.arn}, status=${this.activeStatus})`
+    }
+}
+
+export class DefaultIotPolicy {
+    public readonly name: string
+    public readonly arn: string
+    public readonly document: Iot.PolicyDocument | undefined
+    public readonly defaultVersionId: Iot.PolicyVersionId | undefined
+    public readonly lastModifiedDate: Date | undefined
+    public readonly creationDate: Date | undefined
+
+    public constructor({
+        name,
+        arn,
+        document,
+        versionId,
+        creationDate,
+        lastModifiedDate,
+    }: {
+        name: string
+        arn: string
+        document?: string
+        versionId?: Iot.PolicyVersionId
+        creationDate?: Date
+        lastModifiedDate?: Date
+    }) {
+        this.name = name
+        this.arn = arn
+        this.document = document
+        this.defaultVersionId = versionId
+        this.creationDate = creationDate
+        this.lastModifiedDate = lastModifiedDate
+    }
+
+    public [inspect.custom](): string {
+        return `Policy (id=${this.name}, arn=${this.arn})`
     }
 }
 

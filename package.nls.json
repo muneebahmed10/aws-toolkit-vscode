@@ -413,6 +413,8 @@
     "AWS.apig.remoteInvoke.noApiResource": "Select an API Resource",
     "AWS.apig.remoteInvoke.noMethod": "Select a HTTP method",
     "AWS.apig.selectStage": "Select an API stage",
+    "AWS.iot.createThing.prompt": "Enter a new Thing name",
+    "AWS.iot.createThing.placeHolder": "Thing Name",
     "AWS.iot.createThing.success": "Created Thing {0}",
     "AWS.iot.createThing.error": "Failed to create Thing: {0}",
     "AWS.iot.deleteThing.success": "Deleted {0}",

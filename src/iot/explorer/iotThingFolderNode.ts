@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode'
-import { IotThing, IotClient, UpdateThingRequest, CreateThingResponse } from '../../shared/clients/iotClient'
+import { IotClient, UpdateThingRequest, CreateThingResponse } from '../../shared/clients/iotClient'
 import { AWSTreeNodeBase } from '../../shared/treeview/nodes/awsTreeNodeBase'
 import { ErrorNode } from '../../shared/treeview/nodes/errorNode'
 import { LoadMoreNode } from '../../shared/treeview/nodes/loadMoreNode'

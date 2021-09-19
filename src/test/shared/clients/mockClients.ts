@@ -25,6 +25,8 @@ import {
     UpdateCertificateRequest,
     ListThingCertificatesRequest,
     ListThingCertificatesResponse,
+    ListPoliciesRequest,
+    ListPoliciesResponse,
 } from '../../../shared/clients/iotClient'
 import { ToolkitClientBuilder } from '../../../shared/clients/toolkitClientBuilder'
 
@@ -590,6 +592,7 @@ export class MockIotClient implements IotClient {
         request: ListThingCertificatesRequest
     ) => Promise<ListThingCertificatesResponse>
     public readonly updateCertificate: (request: UpdateCertificateRequest) => Promise<void>
+    public readonly listPolicies: (request: ListPoliciesRequest) => Promise<ListPoliciesResponse>
 
     public constructor({
         regionCode = '',
@@ -603,6 +606,7 @@ export class MockIotClient implements IotClient {
             nextToken: undefined,
         }),
         updateCertificate = async (request: UpdateCertificateRequest) => {},
+        listPolicies = async (request: ListPoliciesRequest) => ({ policies: [], nextMarker: undefined }),
     }: {
         regionCode?: string
         listAllThings?(): Promise<Iot.ThingAttribute[]>
@@ -612,6 +616,7 @@ export class MockIotClient implements IotClient {
         listCertificates?(request: ListCertificatesRequest): Promise<ListCertificatesResponse>
         listThingCertificates?(request: ListThingCertificatesRequest): Promise<ListThingCertificatesResponse>
         updateCertificate?(request: UpdateCertificateRequest): Promise<void>
+        listPolicies?(request: ListPoliciesRequest): Promise<ListPoliciesResponse>
     }) {
         this.regionCode = regionCode
         this.listAllThings = listAllThings
@@ -621,6 +626,7 @@ export class MockIotClient implements IotClient {
         this.listCertificates = listCertificates
         this.listThingCertificates = listThingCertificates
         this.updateCertificate = updateCertificate
+        this.listPolicies = listPolicies
     }
 }
 

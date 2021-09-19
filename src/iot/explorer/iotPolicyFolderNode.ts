@@ -16,18 +16,18 @@ import { ChildNodePage } from '../../awsexplorer/childNodeLoader'
 import { inspect } from 'util'
 import { Workspace } from '../../shared/vscode/workspace'
 import { getLogger } from '../../shared/logger'
-import { IotCertWithPoliciesNode } from './iotCertificateNode'
+import { IotPolicyNode } from './iotPolicyNode'
 
 /**
  * Represents the group of all IoT Things.
  */
-export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode {
+export class IotPolicyFolderNode extends AWSTreeNodeBase implements LoadMoreNode {
     private readonly childLoader: ChildNodeLoader
 
     public constructor(public readonly iot: IotClient, private readonly workspace = Workspace.vscode()) {
-        super('IoT Certificates', vscode.TreeItemCollapsibleState.Collapsed)
-        this.tooltip = 'IoT Certificates'
-        this.contextValue = 'awsIotCertsNode'
+        super('IoT Policies', vscode.TreeItemCollapsibleState.Collapsed)
+        this.tooltip = 'IoT Policies'
+        this.contextValue = 'awsIotPoliciesNode'
         this.childLoader = new ChildNodeLoader(this, token => this.loadPage(token))
     }
 
@@ -36,7 +36,7 @@ export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
             getChildNodes: async () => this.childLoader.getChildren(),
             getErrorNode: async (error: Error, logID: number) => new ErrorNode(this, error, logID),
             getNoChildrenPlaceholderNode: async () =>
-                new PlaceholderNode(this, localize('AWS.explorerNode.iot.noCerts', '[No Certificates found]')),
+                new PlaceholderNode(this, localize('AWS.explorerNode.iot.noPolicy', '[No Policies found]')),
         })
     }
 
@@ -54,29 +54,22 @@ export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
 
     private async loadPage(continuationToken: string | undefined): Promise<ChildNodePage> {
         getLogger().debug(`Loading page for %O using continuationToken %s`, this, continuationToken)
-        const response = await this.iot.listCertificates({
+        const response = await this.iot.listPolicies({
             marker: continuationToken,
             pageSize: this.getMaxItemsPerPage(),
         })
 
-        const newCerts = response.certificates.map(cert => new IotCertWithPoliciesNode(cert, this, this.iot))
+        const newPolicies = response.policies.map(policy => new IotPolicyNode(policy, this, this.iot))
 
-        getLogger().debug(`Loaded certificates: %O`, newCerts)
+        getLogger().debug(`Loaded policies: %O`, newPolicies)
         return {
             newContinuationToken: response.nextMarker ?? undefined,
-            newChildren: [...newCerts],
+            newChildren: [...newPolicies],
         }
     }
 
-    /**
-     * See {@link IotClient.createThing}
-     */
-    // public async createThing(request: UpdateThingRequest): Promise<CreateThingResponse> {
-    //     return this.iot.createThing(request)
-    // }
-
     public [inspect.custom](): string {
-        return `IotCertificates`
+        return `IotPolicies`
     }
 
     private getMaxItemsPerPage(): number | undefined {

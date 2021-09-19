@@ -23,6 +23,7 @@ import { IotNode } from './iotNodes'
 import { IotThingFolderNode } from './iotThingFolderNode'
 import { IotCertsFolderNode } from './iotCertFolderNode'
 import { IotThingNode } from './iotThingNode'
+import { IotPolicyNode } from './iotPolicyNode'
 
 const CONTEXT_BASE = 'awsIotCertificateNode'
 
@@ -40,13 +41,11 @@ const S3_DATE_FORMAT = 'll LTS [GMT]ZZ'
  * Certificate Folder Node as a parent.
  */
 export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNode {
-    //private readonly childLoader: ChildNodeLoader
-
     public constructor(
         public readonly certificate: IotCertificate,
         public readonly parent: IotCertsFolderNode | IotThingNode,
         public readonly iot: IotClient,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        collapsibleState: vscode.TreeItemCollapsibleState,
         protected readonly workspace = Workspace.vscode()
     ) {
         super(certificate.id, collapsibleState)
@@ -61,7 +60,7 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
         //     dark: vscode.Uri.file(ext.iconPaths.dark.s3),
         //     light: vscode.Uri.file(ext.iconPaths.light.s3),
         // }
-        this.contextValue = CONTEXT_BASE
+        this.contextValue = `${CONTEXT_BASE}.${this.certificate.activeStatus}`
     }
 
     /**
@@ -115,7 +114,7 @@ export class IotCertWithPoliciesNode extends IotCertificateNode implements LoadM
         protected readonly workspace = Workspace.vscode()
     ) {
         super(certificate, parent, iot, vscode.TreeItemCollapsibleState.Collapsed, workspace)
-        this.contextValue = 'awsIotCertWithPoliciesNode'
+        this.contextValue = `${CONTEXT_BASE}.Policies.${this.certificate.activeStatus}`
         this.childLoader = new ChildNodeLoader(this, token => this.loadPage(token))
     }
 
@@ -142,16 +141,22 @@ export class IotCertWithPoliciesNode extends IotCertificateNode implements LoadM
 
     private async loadPage(continuationToken: string | undefined): Promise<ChildNodePage> {
         getLogger().debug(`Loading page for %O using continuationToken %s`, this, continuationToken)
-        const response = await this.iot.listCertificates({
+        const response = await this.iot.listPolicies({
+            principal: this.certificate.arn,
             marker: continuationToken,
+            pageSize: this.getMaxItemsPerPage(),
         })
 
-        //const newThings = response.things.map(thing => new IotThingNode(thing, this, this.iot))
+        const newPolicies = response.policies.map(policy => new IotPolicyNode(policy, this, this.iot))
 
-        //getLogger().debug(`Loaded thigs: %O`, newThings)
+        getLogger().debug(`Loaded policies: %O`, newPolicies)
         return {
             newContinuationToken: response.nextMarker ?? undefined,
-            newChildren: [],
+            newChildren: [...newPolicies],
         }
+    }
+
+    private getMaxItemsPerPage(): number | undefined {
+        return this.workspace.getConfiguration('aws').get<number>('iot.maxItemsPerPage')
     }
 }
