@@ -48,7 +48,9 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
         collapsibleState: vscode.TreeItemCollapsibleState,
         protected readonly workspace = Workspace.vscode()
     ) {
-        super(certificate.id, collapsibleState)
+        //Show only 8 characters in the explorer instead of the full 64. The entire
+        //ID can be copied from the context menu or viewed when hovered over.
+        super(certificate.id.substring(0, 8), collapsibleState)
         this.tooltip = localize(
             'AWS.explorerNode.iot.fileTooltip',
             '{0}\nStatus: {1}\nCreated: {2}',
@@ -56,6 +58,7 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
             this.certificate.activeStatus,
             moment(this.certificate.creationDate).format(S3_DATE_FORMAT)
         )
+        this.description = `\t[${this.certificate.activeStatus}]`
         // this.iconPath = {
         //     dark: vscode.Uri.file(ext.iconPaths.dark.s3),
         //     light: vscode.Uri.file(ext.iconPaths.light.s3),
@@ -84,6 +87,13 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
         await this.iot.updateCertificate({ certificateId: this.certificate.id, newStatus: STATUS_REVOKED })
     }
 
+    /**
+     * See {@link IotClient.attachPolicy}
+     */
+    public async attachPolicy(policyName: string): Promise<void> {
+        await this.iot.attachPolicy({ policyName: policyName, target: this.certificate.arn })
+    }
+
     public update(): void {
         return undefined
     }
@@ -98,6 +108,25 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
 
     public [inspect.custom](): string {
         return `IotCertificateNode (certificate=${this.certificate.id})`
+    }
+}
+
+export class IotThingCertNode extends IotCertificateNode {
+    public constructor(
+        public readonly certificate: IotCertificate,
+        public readonly parent: IotThingNode,
+        public readonly iot: IotClient,
+        protected readonly workspace = Workspace.vscode()
+    ) {
+        super(certificate, parent, iot, vscode.TreeItemCollapsibleState.None, workspace)
+        this.contextValue = `${CONTEXT_BASE}.Things.${this.certificate.activeStatus}`
+    }
+
+    /**
+     * See {@link IotClient.detachThingPrincipal}
+     */
+    public async detachThing(): Promise<void> {
+        await this.iot.detachThingPrincipal({ thingName: this.parent.thing.name, principal: this.certificate.arn })
     }
 }
 
@@ -154,6 +183,10 @@ export class IotCertWithPoliciesNode extends IotCertificateNode implements LoadM
             newContinuationToken: response.nextMarker ?? undefined,
             newChildren: [...newPolicies],
         }
+    }
+
+    public async deleteCertificate(): Promise<void> {
+        return undefined
     }
 
     private getMaxItemsPerPage(): number | undefined {

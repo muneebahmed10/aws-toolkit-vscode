@@ -26,12 +26,12 @@ export async function createThingCommand(
     getLogger().debug('CreateThing called for: %O', node)
 
     const thingName = await window.showInputBox({
-        prompt: localize('AWS.s3.creatThing.prompt', 'Enter a new Thing name'),
-        placeHolder: localize('AWS.s3.createThing.placeHolder', 'Thing Name'),
+        prompt: localize('AWS.iot.creatThing.prompt', 'Enter a new Thing name'),
+        placeHolder: localize('AWS.iot.createThing.placeHolder', 'Thing Name'),
     })
 
     if (!thingName) {
-        getLogger().info('CreateThing cancelled')
+        getLogger().info('CreateThing canceled')
         //telemetry.recordS3CreateBucket({ result: 'Cancelled' })
         return
     }
@@ -41,14 +41,11 @@ export async function createThingCommand(
         const thing = await node.createThing({ thingName })
 
         getLogger().info('Created thing: %O', thing)
-        window.showInformationMessage(localize('AWS.s3.createBucket.success', 'Created Thing: {0}', thingName))
+        window.showInformationMessage(localize('AWS.iot.createThing.success', 'Created Thing {0}', thingName))
         //telemetry.recordS3CreateBucket({ result: 'Succeeded' })
     } catch (e) {
         getLogger().error(`Failed to create Thing ${thingName}: %O`, e)
-        showViewLogsMessage(
-            localize('AWS.s3.createBucket.error.general', 'Failed to create Thing: {0}', thingName),
-            window
-        )
+        showViewLogsMessage(localize('AWS.iot.createThing.error', 'Failed to create Thing: {0}', thingName), window)
         //telemetry.recordS3CreateBucket({ result: 'Failed' })
     }
 

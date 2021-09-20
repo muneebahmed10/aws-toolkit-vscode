@@ -32,7 +32,24 @@ export class IotPolicyNode extends AWSTreeNodeBase implements AWSResourceNode {
         //     dark: vscode.Uri.file(ext.iconPaths.dark.s3),
         //     light: vscode.Uri.file(ext.iconPaths.light.s3),
         // }
-        this.contextValue = 'awsIotPolicyNode'
+        this.contextValue = `awsIotPolicyNode.${this.parent.contextValue}`
+    }
+
+    /**
+     * See {@link IotClient.detachPolicy}
+     */
+    public async detachPolicy(): Promise<void> {
+        if (this.parent instanceof IotPolicyFolderNode) {
+            return undefined
+        }
+        await this.iot.detachPolicy({ policyName: this.policy.name, target: this.parent.certificate.arn })
+    }
+
+    /**
+     * See {@link IotClient.deletePolicy}
+     */
+    public async deletePolicy(): Promise<void> {
+        await this.iot.deletePolicy({ policyName: this.policy.name })
     }
 
     public get arn(): string {

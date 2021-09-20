@@ -22,19 +22,22 @@ import { IotPolicyFolderNode } from './iotPolicyFolderNode'
  * Contains buckets for a specific region as child nodes.
  */
 export class IotNode extends AWSTreeNodeBase {
+    public readonly thingFolderNode: IotThingFolderNode
+    public readonly certFolderNode: IotCertsFolderNode
+    public readonly policyFolderNode: IotPolicyFolderNode
+
     public constructor(private readonly iot: IotClient) {
         super('IoT', vscode.TreeItemCollapsibleState.Collapsed)
         this.contextValue = 'awsIotNode'
+        this.thingFolderNode = new IotThingFolderNode(this.iot)
+        this.certFolderNode = new IotCertsFolderNode(this.iot)
+        this.policyFolderNode = new IotPolicyFolderNode(this.iot)
     }
 
     public async getChildren(): Promise<AWSTreeNodeBase[]> {
         return await makeChildrenNodes({
             getChildNodes: async () => {
-                const categories: AWSTreeNodeBase[] = []
-                categories.push(new IotThingFolderNode(this.iot))
-                categories.push(new IotCertsFolderNode(this.iot))
-                categories.push(new IotPolicyFolderNode(this.iot))
-
+                const categories: AWSTreeNodeBase[] = [this.thingFolderNode, this.certFolderNode, this.policyFolderNode]
                 return categories
             },
             getErrorNode: async (error: Error, logID: number) => new ErrorNode(this, error, logID),

@@ -75,6 +75,16 @@ export interface UpdateCertificateRequest {
     readonly newStatus: Iot.CertificateStatus
 }
 
+export interface DeleteCertificateRequest {
+    readonly certificateId: Iot.CertificateId
+    readonly forceDelete: Iot.ForceDelete
+}
+
+export interface AttachThingPrincipalRequest {
+    readonly thingName: Iot.ThingName
+    readonly principal: Iot.Principal
+}
+
 export interface ListPoliciesRequest {
     readonly principal?: Iot.Principal
     readonly pageSize?: Iot.PageSize
@@ -85,6 +95,15 @@ export interface ListPoliciesRequest {
 export interface ListPoliciesResponse {
     readonly policies: IotPolicy[]
     readonly nextMarker: string | undefined
+}
+
+export interface DeletePolicyRequest {
+    readonly policyName: Iot.PolicyName
+}
+
+export interface AttachPolicyRequest {
+    readonly policyName: Iot.PolicyName
+    readonly target: Iot.Target
 }
 
 export class DefaultIotClient {
@@ -118,7 +137,7 @@ export class DefaultIotClient {
     }
 
     /**
-     * Lists Things in the region of the client.
+     * Lists Things owned by the client.
      *
      * @throws Error if there is an error calling IoT.
      */
@@ -142,7 +161,6 @@ export class DefaultIotClient {
             throw e
         }
 
-        // S3#ListBuckets returns buckets across all regions
         const allThingPromises: Promise<IotThing | undefined>[] = iotThings.map(async iotThing => {
             const bucketName = iotThing.thingName
             const thingArn = iotThing.thingArn
@@ -374,6 +392,69 @@ export class DefaultIotClient {
     }
 
     /**
+     * Deletes the specified IoT Certificate.
+     *
+     * Note that a certificate cannot be deleted if it is ACTIVE, or has attached
+     * Things or policies. A certificate may be force deleted if it is INACTIVE
+     * and has no attached Things.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async deleteCertificate(request: DeleteCertificateRequest): Promise<void> {
+        getLogger().debug('DeleteCertificate called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot
+                .deleteCertificate({ certificateId: request.certificateId, forceDelete: request.forceDelete })
+                .promise()
+        } catch (e) {
+            getLogger().error('Failed ot delete certificate: %O', e)
+            throw e
+        }
+
+        getLogger().debug('DeleteCertificate successful')
+    }
+
+    /**
+     * Attaches the certificate specified by the principal to the specified Thing.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async attachThingPrincipal(request: AttachThingPrincipalRequest): Promise<void> {
+        getLogger().debug('AttachThingPrincipal called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot.attachThingPrincipal({ thingName: request.thingName, principal: request.principal }).promise()
+        } catch (e) {
+            getLogger().error('Failed to attach certificate: %O', e)
+            throw e
+        }
+
+        getLogger().debug('AttachThingPrincipal successful')
+    }
+
+    /**
+     * Detaches the certificate specified by the principal from the specified Thing.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async detachThingPrincipal(request: AttachThingPrincipalRequest): Promise<void> {
+        getLogger().debug('DetachThingPrincipal called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot.detachThingPrincipal({ thingName: request.thingName, principal: request.principal }).promise()
+        } catch (e) {
+            getLogger().error('Failed to detach certificate: %O', e)
+            throw e
+        }
+
+        getLogger().debug('DetachThingPrincipal successful')
+    }
+
+    /**
      * Lists IoT policies for principal, or all policies if principal is absent.
      *
      * @throws Error if there is an error calling IoT.
@@ -430,6 +511,67 @@ export class DefaultIotClient {
         const response: ListPoliciesResponse = { policies: policies, nextMarker: nextMarker }
         getLogger().debug('ListCertificates returned response: %O', response)
         return { policies: policies, nextMarker: nextMarker }
+    }
+
+    /**
+     * Attaches the specified policy to the specified target certificate.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async attachPolicy(request: AttachPolicyRequest): Promise<void> {
+        getLogger().debug('AttachPolicy called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot.attachPolicy({ policyName: request.policyName, target: request.target }).promise()
+        } catch (e) {
+            getLogger().error('Failed to attach policy: %O', e)
+            throw e
+        }
+
+        getLogger().debug('AttachPolicy successful')
+    }
+
+    /**
+     * Detaches the specified policy to the specified target certificate.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async detachPolicy(request: AttachPolicyRequest): Promise<void> {
+        getLogger().debug('DetachPolicy called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot.detachPolicy({ policyName: request.policyName, target: request.target }).promise()
+        } catch (e) {
+            getLogger().error('Failed to detach policy: %O', e)
+            throw e
+        }
+
+        getLogger().debug('DetachPolicy successful')
+    }
+
+    /**
+     * Deletes an IoT Policy.
+     *
+     * Note that a policy cannot be deleted if it is attached to a certificate,
+     * or has non-default versions. A policy with non default versions must first
+     * delete versions with deletePolicyVersions()
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async deletePolicy(request: DeletePolicyRequest): Promise<void> {
+        getLogger().debug('DeletePolicy called with request: %O', request)
+        const iot = await this.createIot()
+
+        try {
+            await iot.deletePolicy({ policyName: request.policyName }).promise()
+        } catch (e) {
+            getLogger().error('Failed to delete Policy: %O', e)
+            throw e
+        }
+
+        getLogger().debug('DeletePolicy successful')
     }
 }
 

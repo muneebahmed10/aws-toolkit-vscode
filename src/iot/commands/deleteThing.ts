@@ -20,8 +20,7 @@ const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
  * Deletes the thing represented by the given node.
  *
  * Prompts the user for confirmation.
- * Deletes the file.
- * Shows status bar message.
+ * Deletes the thing.
  * Refreshes the parent node.
  */
 export async function deleteThingCommand(
@@ -35,14 +34,14 @@ export async function deleteThingCommand(
 
     const isConfirmed = await showConfirmationMessage(
         {
-            prompt: localize('AWS.s3.deleteFile.prompt', 'Are you sure you want to delete thing {0}?', thingName),
+            prompt: localize('AWS.iot.deleteThing.prompt', 'Are you sure you want to delete Thing {0}?', thingName),
             confirm: localizedText.localizedDelete,
             cancel: localizedText.cancel,
         },
         window
     )
     if (!isConfirmed) {
-        getLogger().info('DeleteThing cancelled')
+        getLogger().info('DeleteThing canceled')
         //telemetry.recordS3DeleteObject({ result: 'Cancelled' })
         return
     }
@@ -53,14 +52,14 @@ export async function deleteThingCommand(
 
         getLogger().info(`Successfully deleted Thing ${thingName}`)
         window.setStatusBarMessage(
-            addCodiconToString('trash', localize('AWS.deleteFile.success', 'Deleted {0}', node.thing.name)),
+            addCodiconToString('trash', localize('AWS.iot.deleteThing.success', 'Deleted {0}', node.thing.name)),
             DELETE_FILE_DISPLAY_TIMEOUT_MS
         )
         //telemetry.recordS3DeleteObject({ result: 'Succeeded' })
     } catch (e) {
         getLogger().error(`Failed to delete Thing ${thingName}: %O`, e)
         showViewLogsMessage(
-            localize('AWS.s3.deleteFile.error.general', 'Failed to delete Thing {0}', node.thing.name),
+            localize('AWS.iot.deleteThing.error', 'Failed to delete Thing {0}', node.thing.name),
             window
         )
         //telemetry.recordS3DeleteObject({ result: 'Failed' })

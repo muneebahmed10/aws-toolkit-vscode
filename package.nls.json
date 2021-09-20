@@ -417,6 +417,7 @@
     "AWS.iot.createThing.placeHolder": "Thing Name",
     "AWS.iot.createThing.success": "Created Thing {0}",
     "AWS.iot.createThing.error": "Failed to create Thing: {0}",
+    "AWS.iot.deleteThing.prompt": "Are you sure you want to delete Thing {0}?",
     "AWS.iot.deleteThing.success": "Deleted {0}",
     "AWS.iot.deleteThing.error": "Failed to delete Thing {0}",
     "AWS.s3.createBucket.placeHolder": "Bucket Name",

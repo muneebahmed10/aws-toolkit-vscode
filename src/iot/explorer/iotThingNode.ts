@@ -20,7 +20,7 @@ import { inspect } from 'util'
 import { getLogger } from '../../shared/logger'
 import { IotNode } from './iotNodes'
 import { IotThingFolderNode } from './iotThingFolderNode'
-import { IotCertificateNode } from './iotCertificateNode'
+import { IotThingCertNode } from './iotCertificateNode'
 
 /**
  * Represents an IoT Thing that may have attached certificates.
@@ -73,9 +73,7 @@ export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode, Lo
             maxResults: this.getMaxItemsPerPage(),
         })
 
-        const newCerts = response.certificates.map(
-            cert => new IotCertificateNode(cert, this, this.iot, vscode.TreeItemCollapsibleState.None)
-        )
+        const newCerts = response.certificates.map(cert => new IotThingCertNode(cert, this, this.iot))
 
         getLogger().debug(`Loaded certificates: %O`, newCerts)
         return {

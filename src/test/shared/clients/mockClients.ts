@@ -27,6 +27,10 @@ import {
     ListThingCertificatesResponse,
     ListPoliciesRequest,
     ListPoliciesResponse,
+    AttachThingPrincipalRequest,
+    AttachPolicyRequest,
+    DeleteCertificateRequest,
+    DeletePolicyRequest,
 } from '../../../shared/clients/iotClient'
 import { ToolkitClientBuilder } from '../../../shared/clients/toolkitClientBuilder'
 
@@ -592,7 +596,13 @@ export class MockIotClient implements IotClient {
         request: ListThingCertificatesRequest
     ) => Promise<ListThingCertificatesResponse>
     public readonly updateCertificate: (request: UpdateCertificateRequest) => Promise<void>
+    public readonly deleteCertificate: (request: DeleteCertificateRequest) => Promise<void>
+    public readonly attachThingPrincipal: (request: AttachThingPrincipalRequest) => Promise<void>
+    public readonly detachThingPrincipal: (request: AttachThingPrincipalRequest) => Promise<void>
     public readonly listPolicies: (request: ListPoliciesRequest) => Promise<ListPoliciesResponse>
+    public readonly attachPolicy: (request: AttachPolicyRequest) => Promise<void>
+    public readonly detachPolicy: (request: AttachPolicyRequest) => Promise<void>
+    public readonly deletePolicy: (request: DeletePolicyRequest) => Promise<void>
 
     public constructor({
         regionCode = '',
@@ -606,7 +616,13 @@ export class MockIotClient implements IotClient {
             nextToken: undefined,
         }),
         updateCertificate = async (request: UpdateCertificateRequest) => {},
+        deleteCertificate = async (request: DeleteCertificateRequest) => {},
+        attachThingPrincipal = async (request: AttachThingPrincipalRequest) => {},
+        detachThingPrincipal = async (request: AttachThingPrincipalRequest) => {},
         listPolicies = async (request: ListPoliciesRequest) => ({ policies: [], nextMarker: undefined }),
+        attachPolicy = async (request: AttachPolicyRequest) => {},
+        detachPolicy = async (request: AttachPolicyRequest) => {},
+        deletePolicy = async (request: DeletePolicyRequest) => {},
     }: {
         regionCode?: string
         listAllThings?(): Promise<Iot.ThingAttribute[]>
@@ -616,7 +632,13 @@ export class MockIotClient implements IotClient {
         listCertificates?(request: ListCertificatesRequest): Promise<ListCertificatesResponse>
         listThingCertificates?(request: ListThingCertificatesRequest): Promise<ListThingCertificatesResponse>
         updateCertificate?(request: UpdateCertificateRequest): Promise<void>
+        deleteCertificate?(request: DeleteCertificateRequest): Promise<void>
+        attachThingPrincipal?(request: AttachThingPrincipalRequest): Promise<void>
+        detachThingPrincipal?(request: AttachThingPrincipalRequest): Promise<void>
         listPolicies?(request: ListPoliciesRequest): Promise<ListPoliciesResponse>
+        attachPolicy?(request: AttachPolicyRequest): Promise<void>
+        detachPolicy?(request: AttachPolicyRequest): Promise<void>
+        deletePolicy?(request: DeletePolicyRequest): Promise<void>
     }) {
         this.regionCode = regionCode
         this.listAllThings = listAllThings
@@ -626,7 +648,13 @@ export class MockIotClient implements IotClient {
         this.listCertificates = listCertificates
         this.listThingCertificates = listThingCertificates
         this.updateCertificate = updateCertificate
+        this.deleteCertificate = deleteCertificate
+        this.attachThingPrincipal = attachThingPrincipal
+        this.detachThingPrincipal = detachThingPrincipal
         this.listPolicies = listPolicies
+        this.attachPolicy = attachPolicy
+        this.detachPolicy = detachPolicy
+        this.deletePolicy = deletePolicy
     }
 }
 
