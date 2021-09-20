@@ -59,10 +59,6 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
             moment(this.certificate.creationDate).format(S3_DATE_FORMAT)
         )
         this.description = `\t[${this.certificate.activeStatus}]`
-        // this.iconPath = {
-        //     dark: vscode.Uri.file(ext.iconPaths.dark.s3),
-        //     light: vscode.Uri.file(ext.iconPaths.light.s3),
-        // }
         this.contextValue = `${CONTEXT_BASE}.${this.certificate.activeStatus}`
     }
 

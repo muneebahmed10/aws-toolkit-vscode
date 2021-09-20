@@ -68,13 +68,6 @@ export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
         }
     }
 
-    /**
-     * See {@link IotClient.createThing}
-     */
-    // public async createThing(request: UpdateThingRequest): Promise<CreateThingResponse> {
-    //     return this.iot.createThing(request)
-    // }
-
     public [inspect.custom](): string {
         return `IotCertificates`
     }
