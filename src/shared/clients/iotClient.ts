@@ -302,6 +302,16 @@ export class DefaultIotClient {
         return { certificates: certs, nextMarker: nextMarker }
     }
 
+    /**
+     * Lists all IoT certificates attached to IoT Thing.
+     *
+     * listThingPrincipals() returns ARNS of principals that may be X.509
+     * certificates, IAM users/groups/roles, or Amazon Cognito identities.
+     * The list is filtered for certificates only, and describeCertificate()
+     * is called to get the information for each certificate.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
     public async listThingCertificates(request: ListThingCertificatesRequest): Promise<ListThingCertificatesResponse> {
         getLogger().debug('ListThingCertificates called with request: %O', request)
         const iot = await this.createIot()

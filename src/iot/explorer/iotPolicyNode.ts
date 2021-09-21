@@ -13,7 +13,7 @@ import { Workspace } from '../../shared/vscode/workspace'
 import { inspect } from 'util'
 import { getLogger } from '../../shared/logger'
 import { IotPolicyFolderNode } from './iotPolicyFolderNode'
-import { IotCertificateNode } from './iotCertificateNode'
+import { IotCertWithPoliciesNode } from './iotCertificateNode'
 
 /**
  * Represents an IoT Policy that may have either a Certificate Node or the
@@ -22,7 +22,7 @@ import { IotCertificateNode } from './iotCertificateNode'
 export class IotPolicyNode extends AWSTreeNodeBase implements AWSResourceNode {
     public constructor(
         public readonly policy: IotPolicy,
-        public readonly parent: IotPolicyFolderNode | IotCertificateNode,
+        public readonly parent: IotPolicyFolderNode | IotCertWithPoliciesNode,
         public readonly iot: IotClient,
         protected readonly workspace = Workspace.vscode()
     ) {

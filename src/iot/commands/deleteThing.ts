@@ -52,7 +52,7 @@ export async function deleteThingCommand(
 
         getLogger().info(`Successfully deleted Thing ${thingName}`)
         window.setStatusBarMessage(
-            addCodiconToString('trash', localize('AWS.iot.deleteThing.success', 'Deleted {0}', node.thing.name)),
+            addCodiconToString('trash', localize('AWS.iot.deleteThing.success', 'Deleted Thing {0}', node.thing.name)),
             DELETE_FILE_DISPLAY_TIMEOUT_MS
         )
         //telemetry.recordS3DeleteObject({ result: 'Succeeded' })
