@@ -17,6 +17,7 @@ import { inspect } from 'util'
 import { Workspace } from '../../shared/vscode/workspace'
 import { getLogger } from '../../shared/logger'
 import { IotPolicyNode } from './iotPolicyNode'
+import { IotNode } from './iotNodes'
 
 /**
  * Represents the group of all IoT Things.
@@ -24,7 +25,11 @@ import { IotPolicyNode } from './iotPolicyNode'
 export class IotPolicyFolderNode extends AWSTreeNodeBase implements LoadMoreNode {
     private readonly childLoader: ChildNodeLoader
 
-    public constructor(public readonly iot: IotClient, private readonly workspace = Workspace.vscode()) {
+    public constructor(
+        public readonly iot: IotClient,
+        public readonly parent: IotNode,
+        private readonly workspace = Workspace.vscode()
+    ) {
         super('Policies', vscode.TreeItemCollapsibleState.Collapsed)
         this.tooltip = 'IoT Policies'
         this.contextValue = 'awsIotPoliciesNode'

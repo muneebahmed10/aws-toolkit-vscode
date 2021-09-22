@@ -754,6 +754,10 @@
                     "when": "false"
                 },
                 {
+                    "command": "aws.iot.deleteCert",
+                    "when": "false"
+                },
+                {
                     "command": "aws.iot.activateCert",
                     "when": "false"
                 },
@@ -1196,6 +1200,11 @@
                     "group": "3@1"
                 },
                 {
+                    "command": "aws.iot.deleteCert",
+                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.Policies/",
+                    "group": "3@1"
+                },
+                {
                     "command": "aws.iot.deletePolicy",
                     "when": "view == aws.explorer && viewItem == awsIotPolicyNode.awsIotPoliciesNode",
                     "group": "3@1"
@@ -1501,6 +1510,16 @@
                     "light": "resources/light/exit.svg",
                     "dark": "resources/dark/exit.svg"
                 },
+                "cloud9": {
+                    "cn": {
+                        "category": "%AWS.title.cn%"
+                    }
+                }
+            },
+            {
+                "command": "aws.iot.deleteCert",
+                "title": "%AWS.generic.promptDelete%",
+                "category": "%AWS.title%",
                 "cloud9": {
                     "cn": {
                         "category": "%AWS.title.cn%"

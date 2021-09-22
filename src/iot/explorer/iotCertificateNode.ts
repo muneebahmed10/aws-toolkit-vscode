@@ -181,8 +181,8 @@ export class IotCertWithPoliciesNode extends IotCertificateNode implements LoadM
         }
     }
 
-    public async deleteCertificate(): Promise<void> {
-        return undefined
+    public async deleteCertificate(forceDelete: boolean): Promise<void> {
+        await this.iot.deleteCertificate({ certificateId: this.certificate.id, forceDelete: forceDelete })
     }
 
     private getMaxItemsPerPage(): number | undefined {

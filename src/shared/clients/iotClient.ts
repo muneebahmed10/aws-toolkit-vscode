@@ -33,6 +33,7 @@ interface IotObject {
 export interface ListThingsRequest {
     readonly nextToken?: Iot.NextToken
     readonly maxResults?: Iot.MaxResults
+    readonly principal?: Iot.Principal
 }
 
 export interface ListThingsResponse {
@@ -162,12 +163,9 @@ export class DefaultIotClient {
         }
 
         const allThingPromises: Promise<IotThing | undefined>[] = iotThings.map(async iotThing => {
-            const bucketName = iotThing.thingName
+            const thingName = iotThing.thingName
             const thingArn = iotThing.thingArn
-            if (!bucketName) {
-                return undefined
-            }
-            if (!thingArn) {
+            if (!thingName || !thingArn) {
                 return undefined
             }
             const region = this.regionCode
@@ -176,7 +174,7 @@ export class DefaultIotClient {
             }
             return new DefaultIotThing({
                 region: region,
-                name: bucketName,
+                name: thingName,
                 arn: thingArn,
             })
         })
@@ -381,6 +379,40 @@ export class DefaultIotClient {
     }
 
     /**
+     * Lists Things attached to specified certificate.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async listThingsForCert(request: ListThingsRequest): Promise<string[]> {
+        getLogger().debug('UpdateCertificate called with request: %O', request)
+        const iot = await this.createIot()
+
+        if (!request.principal) {
+            return []
+        }
+
+        let iotThings: Iot.ThingName[]
+        let nextToken: Iot.NextToken | undefined
+        try {
+            const output = await iot
+                .listPrincipalThings({
+                    maxResults: request.maxResults ?? DEFAULT_MAX_THINGS,
+                    nextToken: request.nextToken,
+                    principal: request.principal,
+                })
+                .promise()
+            iotThings = output.things ?? []
+            nextToken = output.nextToken
+        } catch (e) {
+            getLogger().error('Failed to list things: %O', e)
+            throw e
+        }
+
+        getLogger().debug('ListThings returned response: %O', iotThings)
+        return iotThings
+    }
+
+    /**
      * Activates, deactivates, or revokes an IoT Certificate.
      *
      * @throws Error if there is an error calling IoT.
@@ -419,7 +451,7 @@ export class DefaultIotClient {
                 .deleteCertificate({ certificateId: request.certificateId, forceDelete: request.forceDelete })
                 .promise()
         } catch (e) {
-            getLogger().error('Failed ot delete certificate: %O', e)
+            getLogger().error('Failed to delete certificate: %O', e)
             throw e
         }
 

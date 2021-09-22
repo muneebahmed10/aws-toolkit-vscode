@@ -29,9 +29,9 @@ export class IotNode extends AWSTreeNodeBase {
     public constructor(private readonly iot: IotClient) {
         super('IoT', vscode.TreeItemCollapsibleState.Collapsed)
         this.contextValue = 'awsIotNode'
-        this.thingFolderNode = new IotThingFolderNode(this.iot)
-        this.certFolderNode = new IotCertsFolderNode(this.iot)
-        this.policyFolderNode = new IotPolicyFolderNode(this.iot)
+        this.thingFolderNode = new IotThingFolderNode(this.iot, this)
+        this.certFolderNode = new IotCertsFolderNode(this.iot, this)
+        this.policyFolderNode = new IotPolicyFolderNode(this.iot, this)
     }
 
     public async getChildren(): Promise<AWSTreeNodeBase[]> {

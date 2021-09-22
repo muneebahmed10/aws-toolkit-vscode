@@ -40,7 +40,7 @@ export async function deletePolicyCommand(
     //with iot.listTargetsForPolicy()
     const isConfirmed = await showConfirmationMessage(
         {
-            prompt: localize('AWS.iot.deletePolicy.prompt', 'Are you sure you want to delete Thing {0}?', policyName),
+            prompt: localize('AWS.iot.deletePolicy.prompt', 'Are you sure you want to delete Policy {0}?', policyName),
             confirm: localizedText.localizedDelete,
             cancel: localizedText.cancel,
         },
@@ -59,7 +59,7 @@ export async function deletePolicyCommand(
         window.setStatusBarMessage(
             addCodiconToString(
                 'trash',
-                localize('AWS.iot.deleteThing.success', 'Deleted Policy {0}', node.policy.name)
+                localize('AWS.iot.deletePolicy.success', 'Deleted Policy {0}', node.policy.name)
             ),
             DELETE_FILE_DISPLAY_TIMEOUT_MS
         )

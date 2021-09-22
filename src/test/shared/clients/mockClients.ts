@@ -56,6 +56,7 @@ import {
     SignedUrlRequest,
 } from '../../../shared/clients/s3Client'
 import { AppRunnerClient } from '../../../shared/clients/apprunnerClient'
+import { ListThingsRequest } from 'aws-sdk/clients/iot'
 
 interface Clients {
     apiGatewayClient: ApiGatewayClient
@@ -603,6 +604,7 @@ export class MockIotClient implements IotClient {
     public readonly attachPolicy: (request: AttachPolicyRequest) => Promise<void>
     public readonly detachPolicy: (request: AttachPolicyRequest) => Promise<void>
     public readonly deletePolicy: (request: DeletePolicyRequest) => Promise<void>
+    public readonly listThingsForCert: (request: ListThingsRequest) => Promise<string[]>
 
     public constructor({
         regionCode = '',
@@ -623,6 +625,7 @@ export class MockIotClient implements IotClient {
         attachPolicy = async (request: AttachPolicyRequest) => {},
         detachPolicy = async (request: AttachPolicyRequest) => {},
         deletePolicy = async (request: DeletePolicyRequest) => {},
+        listThingsForCert = async (request: ListThingsRequest) => [],
     }: {
         regionCode?: string
         listAllThings?(): Promise<Iot.ThingAttribute[]>
@@ -639,6 +642,7 @@ export class MockIotClient implements IotClient {
         attachPolicy?(request: AttachPolicyRequest): Promise<void>
         detachPolicy?(request: AttachPolicyRequest): Promise<void>
         deletePolicy?(request: DeletePolicyRequest): Promise<void>
+        listThingsForCert?(request: ListThingsRequest): Promise<string[]>
     }) {
         this.regionCode = regionCode
         this.listAllThings = listAllThings
@@ -655,6 +659,7 @@ export class MockIotClient implements IotClient {
         this.attachPolicy = attachPolicy
         this.detachPolicy = detachPolicy
         this.deletePolicy = deletePolicy
+        this.listThingsForCert = listThingsForCert
     }
 }
 

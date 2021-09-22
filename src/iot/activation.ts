@@ -10,7 +10,7 @@ import { ExtContext } from '../shared/extensions'
 import { IotThingFolderNode } from './explorer/iotThingFolderNode'
 import { createThingCommand } from './commands/createThing'
 import { deleteThingCommand } from './commands/deleteThing'
-import { IotCertificateNode, IotThingCertNode } from './explorer/iotCertificateNode'
+import { IotCertificateNode, IotCertWithPoliciesNode, IotThingCertNode } from './explorer/iotCertificateNode'
 import { detachThingCertCommand } from './commands/detachCert'
 import { IotPolicyNode } from './explorer/iotPolicyNode'
 import { detachPolicyCommand } from './commands/detachPolicy'
@@ -20,6 +20,7 @@ import {
     deactivateCertificateCommand,
     revokeCertificateCommand,
 } from './commands/updateCert'
+import { deleteCertCommand } from './commands/deleteCert'
 
 /**
  * Activate API Gateway functionality for the extension.
@@ -37,6 +38,9 @@ export async function activate(activateArguments: {
         }),
         vscode.commands.registerCommand('aws.iot.deleteThing', async (node: IotThingNode) => {
             await deleteThingCommand(node)
+        }),
+        vscode.commands.registerCommand('aws.iot.deleteCert', async (node: IotCertWithPoliciesNode) => {
+            await deleteCertCommand(node)
         }),
         vscode.commands.registerCommand('aws.iot.deletePolicy', async (node: IotPolicyNode) => {
             await deletePolicyCommand(node)

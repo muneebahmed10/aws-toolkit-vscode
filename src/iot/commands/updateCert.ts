@@ -12,6 +12,7 @@ import { Window } from '../../shared/vscode/window'
 import { IotCertificateNode } from '../explorer/iotCertificateNode'
 import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotThingNode } from '../explorer/iotThingNode'
+import { IotThingFolderNode } from '../explorer/iotThingFolderNode'
 import { IotCertsFolderNode } from '../explorer/iotCertFolderNode'
 import { IotNode } from '../explorer/iotNodes'
 
@@ -70,7 +71,11 @@ export async function deactivateCertificateCommand(
         )
     }
 
-    await refreshNode(node.parent, commands)
+    /* Refresh both things and certificates nodes so the status is updated in
+     * both trees. */
+    const baseNode = getBaseNode(node.parent)
+    await refreshNode(baseNode.thingFolderNode, commands)
+    await refreshNode(baseNode.certFolderNode, commands)
 }
 
 /**
@@ -123,7 +128,11 @@ export async function activateCertificateCommand(
         )
     }
 
-    await refreshNode(node.parent, commands)
+    /* Refresh both things and certificates nodes so the status is updated in
+     * both trees. */
+    const baseNode = getBaseNode(node.parent)
+    await refreshNode(baseNode.thingFolderNode, commands)
+    await refreshNode(baseNode.certFolderNode, commands)
 }
 
 /**
@@ -169,10 +178,21 @@ export async function revokeCertificateCommand(
         showViewLogsMessage(localize('AWS.iot.revokeCert.error', 'Failed to revoke {0}', node.certificate.id), window)
     }
 
-    await refreshNode(node.parent, commands)
+    /* Refresh both things and certificates nodes so the status is updated in
+     * both trees. */
+    const baseNode = getBaseNode(node.parent)
+    await refreshNode(baseNode.thingFolderNode, commands)
+    await refreshNode(baseNode.certFolderNode, commands)
 }
 
-async function refreshNode(node: IotThingNode | IotCertsFolderNode, commands: Commands): Promise<void> {
+function getBaseNode(node: IotThingNode | IotCertsFolderNode): IotNode {
+    if (node instanceof IotThingNode) {
+        return node.parent.parent
+    }
+    return node.parent
+}
+
+async function refreshNode(node: IotThingFolderNode | IotCertsFolderNode, commands: Commands): Promise<void> {
     node.clearChildren()
     return commands.execute('aws.refreshAwsExplorerNode', node)
 }
