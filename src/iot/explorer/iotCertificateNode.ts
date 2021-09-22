@@ -52,12 +52,16 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
         //ID can be copied from the context menu or viewed when hovered over.
         super(certificate.id.substring(0, 8), collapsibleState)
         this.tooltip = localize(
-            'AWS.explorerNode.iot.fileTooltip',
+            'AWS.explorerNode.iot.certTooltip',
             '{0}\nStatus: {1}\nCreated: {2}',
             this.certificate.id,
             this.certificate.activeStatus,
             moment(this.certificate.creationDate).format(S3_DATE_FORMAT)
         )
+        this.iconPath = {
+            dark: vscode.Uri.file(ext.iconPaths.dark.certificate),
+            light: vscode.Uri.file(ext.iconPaths.light.certificate),
+        }
         this.description = `\t[${this.certificate.activeStatus}]`
         this.contextValue = `${CONTEXT_BASE}.${this.certificate.activeStatus}`
     }

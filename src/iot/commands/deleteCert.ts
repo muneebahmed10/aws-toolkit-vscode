@@ -43,7 +43,7 @@ export async function deleteCertCommand(
         if (things.length > 0) {
             getLogger().error(`Certificate ${node.certificate.id} has attached Things`)
             showViewLogsMessage(
-                localize('AWS.iot.deleteCert.attachedError', 'Certificate has attached {0}', 'Things'),
+                localize('AWS.iot.deleteCert.attachedError', 'Certificate has attached {0}', things.toString()),
                 window
             )
             return

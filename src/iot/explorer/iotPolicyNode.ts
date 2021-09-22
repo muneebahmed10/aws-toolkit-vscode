@@ -28,6 +28,10 @@ export class IotPolicyNode extends AWSTreeNodeBase implements AWSResourceNode {
     ) {
         super(policy.name)
         this.tooltip = policy.name
+        this.iconPath = {
+            dark: vscode.Uri.file(ext.iconPaths.dark.policy),
+            light: vscode.Uri.file(ext.iconPaths.light.policy),
+        }
         this.contextValue = `awsIotPolicyNode.${this.parent.contextValue}`
     }
 

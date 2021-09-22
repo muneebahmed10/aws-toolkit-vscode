@@ -100,6 +100,13 @@
                     "default": "prompt",
                     "markdownDescription": "%AWS.configuration.description.onDefaultRegionMissing%"
                 },
+                "aws.iot.maxItemsPerPage": {
+                    "type": "number",
+                    "default": 100,
+                    "minimum": 1,
+                    "maximum": 250,
+                    "markdownDescription": "%AWS.configuration.description.iot.maxItemsPerPage%"
+                },
                 "aws.s3.maxItemsPerPage": {
                     "type": "number",
                     "default": 300,
@@ -1160,6 +1167,21 @@
                     "group": "1@1"
                 },
                 {
+                    "command": "aws.iot.deactivateCert",
+                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).ACTIVE$/",
+                    "group": "1@1"
+                },
+                {
+                    "command": "aws.iot.activateCert",
+                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).INACTIVE$/",
+                    "group": "1@1"
+                },
+                {
+                    "command": "aws.iot.revokeCert",
+                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).(ACTIVE|INACTIVE)$/",
+                    "group": "1@2"
+                },
+                {
                     "command": "aws.copyName",
                     "when": "view == aws.explorer && viewItem =~ /^(awsRegionFunctionNode|awsRegionFunctionNodeDownloadable|awsCloudFormationFunctionNode|awsStateMachineNode|awsCloudFormationNode|awsS3BucketNode|awsS3FolderNode|awsS3FileNode|awsApiGatewayNode|awsIotThingNode)$|^(awsAppRunnerServiceNode|awsIotCertificateNode|awsIotPolicyNode)/",
                     "group": "2@1"
@@ -1208,21 +1230,6 @@
                     "command": "aws.iot.deletePolicy",
                     "when": "view == aws.explorer && viewItem == awsIotPolicyNode.awsIotPoliciesNode",
                     "group": "3@1"
-                },
-                {
-                    "command": "aws.iot.deactivateCert",
-                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).ACTIVE$/",
-                    "group": "3@2"
-                },
-                {
-                    "command": "aws.iot.activateCert",
-                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).INACTIVE$/",
-                    "group": "3@3"
-                },
-                {
-                    "command": "aws.iot.revokeCert",
-                    "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).(ACTIVE|INACTIVE)$/",
-                    "group": "3@4"
                 },
                 {
                     "command": "aws.s3.deleteBucket",
