@@ -18,7 +18,6 @@ import { ChildNodeLoader } from '../../awsexplorer/childNodeLoader'
 import { Workspace } from '../../shared/vscode/workspace'
 import { inspect } from 'util'
 import { getLogger } from '../../shared/logger'
-import { IotNode } from './iotNodes'
 import { IotThingFolderNode } from './iotThingFolderNode'
 import { IotThingCertNode } from './iotCertificateNode'
 

@@ -4,7 +4,6 @@
  */
 
 import { getLogger } from '../../shared/logger'
-import * as telemetry from '../../shared/telemetry/telemetry'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'

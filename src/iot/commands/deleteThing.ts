@@ -5,7 +5,6 @@
 
 import * as localizedText from '../../shared/localizedText'
 import { getLogger } from '../../shared/logger'
-import * as telemetry from '../../shared/telemetry/telemetry'
 import { addCodiconToString } from '../../shared/utilities/textUtilities'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { Commands } from '../../shared/vscode/commands'

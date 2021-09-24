@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as path from 'path'
 import * as vscode from 'vscode'
 import * as localizedText from '../../shared/localizedText'
-import { ext } from '../../shared/extensionGlobals'
 import { getLogger } from '../../shared/logger'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
 import { localize } from '../../shared/utilities/vsCodeUtils'
-import { showViewLogsMessage, showOutputMessage, showConfirmationMessage } from '../../shared/utilities/messages'
+import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotCertsFolderNode } from '../explorer/iotCertFolderNode'
 import { fileExists } from '../../shared/filesystemUtilities'
 
@@ -43,8 +41,6 @@ export async function createCertificateCommand(
         getLogger().info('CreateCertificate canceled: No folder selected')
         return
     }
-    const directory = path.dirname(folderLocation.fsPath)
-    const baseName = path.basename(folderLocation.fsPath)
     const certPath = `${folderLocation.fsPath}-certificate.pem.crt`
     const privateKeyPath = `${folderLocation.fsPath}-private.pem.key`
     const publicKeyPath = `${folderLocation.fsPath}-public.pem.key`

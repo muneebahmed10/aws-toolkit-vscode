@@ -5,12 +5,11 @@
 
 import * as vscode from 'vscode'
 import { localize } from '../../shared/utilities/vsCodeUtils'
-import { IotThing, IotClient } from '../../shared/clients/iotClient'
+import { IotClient } from '../../shared/clients/iotClient'
 import { AWSTreeNodeBase } from '../../shared/treeview/nodes/awsTreeNodeBase'
 import { ErrorNode } from '../../shared/treeview/nodes/errorNode'
 import { PlaceholderNode } from '../../shared/treeview/nodes/placeholderNode'
 import { makeChildrenNodes } from '../../shared/treeview/treeNodeUtilities'
-import { IotThingNode } from './iotThingNode'
 import { inspect } from 'util'
 import { IotThingFolderNode } from './iotThingFolderNode'
 import { IotCertsFolderNode } from './iotCertFolderNode'

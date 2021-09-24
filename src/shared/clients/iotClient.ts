@@ -3,16 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as vscode from 'vscode'
 import * as _ from 'lodash'
-import * as mime from 'mime-types'
-import * as path from 'path'
 import * as fs from 'fs-extra'
-import { AWSError, Iot } from 'aws-sdk'
+import { Iot } from 'aws-sdk'
 import { inspect } from 'util'
 import { ext } from '../extensionGlobals'
 import { getLogger } from '../logger'
-import { DefaultFileStreams, FileStreams, pipe, promisifyReadStream } from '../utilities/streamUtilities'
 import { InterfaceNoSymbol } from '../utilities/tsUtils'
 
 export const DEFAULT_MAX_THINGS = 250 // 250 is the maximum allowed by the API
@@ -28,11 +24,6 @@ export type IotClient = InterfaceNoSymbol<DefaultIotClient>
 
 //ARN Pattern for certificates. FIXME import @aws-sdk/util-arn-parser instead.
 const CERT_ARN_PATTERN = /arn:aws:iot:\S+?:\d+:cert\/(\w+)/
-
-interface IotObject {
-    readonly key: string
-    readonly versionId?: string
-}
 
 export interface ListThingsRequest {
     readonly nextToken?: Iot.NextToken
@@ -217,7 +208,6 @@ export class DefaultIotClient {
         const iot = await this.createIot()
 
         let thingArn: Iot.ThingArn
-        let thingId: Iot.ThingId
         try {
             const output = await iot.createThing({ thingName: request.thingName }).promise()
 
@@ -425,7 +415,6 @@ export class DefaultIotClient {
         }
 
         let iotThings: Iot.ThingName[]
-        let nextToken: Iot.NextToken | undefined
         try {
             const output = await iot
                 .listPrincipalThings({
@@ -435,7 +424,6 @@ export class DefaultIotClient {
                 })
                 .promise()
             iotThings = output.things ?? []
-            nextToken = output.nextToken
         } catch (e) {
             getLogger().error('Failed to list things: %O', e)
             throw e
@@ -488,6 +476,7 @@ export class DefaultIotClient {
             getLogger().error('Failed to write files: %O', e)
             throw e
         }
+        getLogger().info(`Downloaded certificate ${certId}`)
 
         getLogger().debug('CreateCertificate succeeded')
     }

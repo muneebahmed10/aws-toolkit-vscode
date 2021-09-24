@@ -4,7 +4,6 @@
  */
 
 import * as vscode from 'vscode'
-import { IotNode } from './explorer/iotNodes'
 import { IotThingNode } from './explorer/iotThingNode'
 import { ExtContext } from '../shared/extensions'
 import { IotThingFolderNode } from './explorer/iotThingFolderNode'
@@ -36,7 +35,6 @@ export async function activate(activateArguments: {
     outputChannel: vscode.OutputChannel
 }): Promise<void> {
     const extensionContext = activateArguments.extContext.extensionContext
-    const regionProvider = activateArguments.extContext.regionProvider
 
     extensionContext.subscriptions.push(
         vscode.commands.registerCommand('aws.iot.createThing', async (node: IotThingFolderNode) => {
