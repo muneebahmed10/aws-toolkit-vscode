@@ -21,6 +21,12 @@ import {
     revokeCertificateCommand,
 } from './commands/updateCert'
 import { deleteCertCommand } from './commands/deleteCert'
+import { IotCertsFolderNode } from './explorer/iotCertFolderNode'
+import { createCertificateCommand } from './commands/createCert'
+import { attachCertificateCommand } from './commands/attachCertificate'
+import { attachPolicyCommand } from './commands/attachPolicy'
+import { IotPolicyFolderNode } from './explorer/iotPolicyFolderNode'
+import { createPolicyCommand } from './commands/createPolicy'
 
 /**
  * Activate API Gateway functionality for the extension.
@@ -39,14 +45,26 @@ export async function activate(activateArguments: {
         vscode.commands.registerCommand('aws.iot.deleteThing', async (node: IotThingNode) => {
             await deleteThingCommand(node)
         }),
+        vscode.commands.registerCommand('aws.iot.createCert', async (node: IotCertsFolderNode) => {
+            await createCertificateCommand(node)
+        }),
         vscode.commands.registerCommand('aws.iot.deleteCert', async (node: IotCertWithPoliciesNode) => {
             await deleteCertCommand(node)
+        }),
+        vscode.commands.registerCommand('aws.iot.attachCert', async (node: IotThingNode) => {
+            await attachCertificateCommand(node)
+        }),
+        vscode.commands.registerCommand('aws.iot.detachCert', async (node: IotThingCertNode) => {
+            await detachThingCertCommand(node)
+        }),
+        vscode.commands.registerCommand('aws.iot.createPolicy', async (node: IotPolicyFolderNode) => {
+            await createPolicyCommand(node)
         }),
         vscode.commands.registerCommand('aws.iot.deletePolicy', async (node: IotPolicyNode) => {
             await deletePolicyCommand(node)
         }),
-        vscode.commands.registerCommand('aws.iot.detachCert', async (node: IotThingCertNode) => {
-            await detachThingCertCommand(node)
+        vscode.commands.registerCommand('aws.iot.attachPolicy', async (node: IotCertWithPoliciesNode) => {
+            await attachPolicyCommand(node)
         }),
         vscode.commands.registerCommand('aws.iot.detachPolicy', async (node: IotPolicyNode) => {
             await detachPolicyCommand(node)

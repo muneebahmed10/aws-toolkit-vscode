@@ -26,7 +26,7 @@ export async function createThingCommand(
     getLogger().debug('CreateThing called for: %O', node)
 
     const thingName = await window.showInputBox({
-        prompt: localize('AWS.iot.creatThing.prompt', 'Enter a new Thing name'),
+        prompt: localize('AWS.iot.createThing.prompt', 'Enter a new Thing name'),
         placeHolder: localize('AWS.iot.createThing.placeHolder', 'Thing Name'),
     })
 

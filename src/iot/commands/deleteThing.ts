@@ -48,6 +48,15 @@ export async function deleteThingCommand(
 
     getLogger().info(`Deleting thing ${thingName}`)
     try {
+        const principalList = (await node.iot.listThingPrincipals({ thingName: thingName })).principals
+        if (principalList?.length ?? 0 > 0) {
+            getLogger().error(`Thing ${thingName} has attached principals: %O`, principalList)
+            showViewLogsMessage(
+                localize('AWS.iot.deleteThing.error', 'Failed to delete Thing {0}', node.thing.name),
+                window
+            )
+            return undefined
+        }
         await node.deleteThing()
 
         getLogger().info(`Successfully deleted Thing ${thingName}`)

@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 import * as _ from 'lodash'
 import * as mime from 'mime-types'
 import * as path from 'path'
+import * as fs from 'fs-extra'
 import { AWSError, Iot } from 'aws-sdk'
 import { inspect } from 'util'
 import { ext } from '../extensionGlobals'
@@ -16,6 +17,9 @@ import { InterfaceNoSymbol } from '../utilities/tsUtils'
 
 export const DEFAULT_MAX_THINGS = 250 // 250 is the maximum allowed by the API
 export const DEFAULT_DELIMITER = '/'
+
+const MODE_RW_R_R = 420 //File permission 0644 rw-r--r-- for PEM files.
+const PEM_FILE_ENCODING = 'ascii'
 
 export type IotThing = InterfaceNoSymbol<DefaultIotThing>
 export type IotCertificate = InterfaceNoSymbol<DefaultIotCertificate>
@@ -71,6 +75,13 @@ export interface ListThingCertificatesResponse {
     readonly nextToken: string | undefined
 }
 
+export interface CreateCertificateRequest {
+    readonly active: boolean
+    readonly certPath: string
+    readonly privateKeyPath: string
+    readonly publicKeyPath: string
+}
+
 export interface UpdateCertificateRequest {
     readonly certificateId: Iot.CertificateId
     readonly newStatus: Iot.CertificateStatus
@@ -96,6 +107,11 @@ export interface ListPoliciesRequest {
 export interface ListPoliciesResponse {
     readonly policies: IotPolicy[]
     readonly nextMarker: string | undefined
+}
+
+export interface CreatePolicyRequest {
+    readonly policyName: Iot.PolicyName
+    readonly documentPath: string
 }
 
 export interface DeletePolicyRequest {
@@ -301,17 +317,14 @@ export class DefaultIotClient {
     }
 
     /**
-     * Lists all IoT certificates attached to IoT Thing.
+     * Lists all principals attached to IoT Thing.
      *
-     * listThingPrincipals() returns ARNS of principals that may be X.509
-     * certificates, IAM users/groups/roles, or Amazon Cognito identities.
-     * The list is filtered for certificates only, and describeCertificate()
-     * is called to get the information for each certificate.
+     * Returns ARNS of principals that may be X.509 certificates, IAM
+     * users/groups/roles, or Amazon Cognito identities.
      *
      * @throws Error if there is an error calling IoT.
      */
-    public async listThingCertificates(request: ListThingCertificatesRequest): Promise<ListThingCertificatesResponse> {
-        getLogger().debug('ListThingCertificates called with request: %O', request)
+    public async listThingPrincipals(request: ListThingCertificatesRequest): Promise<Iot.ListThingPrincipalsResponse> {
         const iot = await this.createIot()
 
         let iotPrincipals: Iot.Principal[]
@@ -330,6 +343,26 @@ export class DefaultIotClient {
             getLogger().error('Failed to list thing principals: %O', e)
             throw e
         }
+        return { principals: iotPrincipals, nextToken: nextToken }
+    }
+
+    /**
+     * Lists all IoT certificates attached to IoT Thing.
+     *
+     * listThingPrincipals() returns ARNS of principals that may be X.509
+     * certificates, IAM users/groups/roles, or Amazon Cognito identities.
+     * The list is filtered for certificates only, and describeCertificate()
+     * is called to get the information for each certificate.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async listThingCertificates(request: ListThingCertificatesRequest): Promise<ListThingCertificatesResponse> {
+        getLogger().debug('ListThingCertificates called with request: %O', request)
+        const iot = await this.createIot()
+
+        const output = await this.listThingPrincipals(request)
+        const iotPrincipals: Iot.Principal[] = output.principals ?? []
+        const nextToken = output.nextToken
 
         const allCertPromises: Promise<IotCertificate | undefined>[] = iotPrincipals.map(async iotPrincipal => {
             const certIdFound = iotPrincipal.match(CERT_ARN_PATTERN)
@@ -410,6 +443,53 @@ export class DefaultIotClient {
 
         getLogger().debug('ListThings returned response: %O', iotThings)
         return iotThings
+    }
+
+    /**
+     * Creates an X.509 certificate with a 2048 bit RSA keypair and saves them
+     * to the filesystem.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async createCertificateAndKeys(request: CreateCertificateRequest): Promise<void> {
+        getLogger().debug('CreateCertificate called with request: %O', request)
+        const iot = await this.createIot()
+
+        let certId: string | undefined
+        let certPem: string | undefined
+        let privateKey: string | undefined
+        let publicKey: string | undefined
+        try {
+            const output = await iot
+                .createKeysAndCertificate({
+                    setAsActive: request.active,
+                })
+                .promise()
+            certId = output.certificateId
+            certPem = output.certificatePem
+            privateKey = output.keyPair?.PrivateKey
+            publicKey = output.keyPair?.PublicKey
+        } catch (e) {
+            getLogger().error('Failed to create certificate and keys: %O', e)
+            throw e
+        }
+
+        if (!certPem || !privateKey || !publicKey) {
+            getLogger().error('Could not download certificate')
+            return undefined
+        }
+
+        //Save resources
+        try {
+            await fs.writeFile(request.certPath, certPem, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
+            await fs.writeFile(request.privateKeyPath, privateKey, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
+            await fs.writeFile(request.publicKeyPath, publicKey, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
+        } catch (e) {
+            getLogger().error('Failed to write files: %O', e)
+            throw e
+        }
+
+        getLogger().debug('CreateCertificate succeeded')
     }
 
     /**
@@ -591,6 +671,36 @@ export class DefaultIotClient {
         }
 
         getLogger().debug('DetachPolicy successful')
+    }
+
+    /**
+     * Creates an policy from the given policy document.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async createPolicy(request: CreatePolicyRequest): Promise<void> {
+        getLogger().debug('CreatePolicy called with request: %O', request)
+        const iot = await this.createIot()
+
+        let policyArn: string | undefined
+        try {
+            const data = await fs.readFile(request.documentPath)
+            //Parse to ensure this is a valid JSON
+            const policyDocument = JSON.parse(data.toString())
+            const output = await iot
+                .createPolicy({
+                    policyName: request.policyName,
+                    policyDocument: JSON.stringify(policyDocument),
+                })
+                .promise()
+            policyArn = output.policyArn
+        } catch (e) {
+            getLogger().error('Failed to create policy: %O', e)
+            throw e
+        }
+        getLogger().info(`Created policy: ${policyArn}`)
+
+        getLogger().debug('CreatePolicy successful')
     }
 
     /**
