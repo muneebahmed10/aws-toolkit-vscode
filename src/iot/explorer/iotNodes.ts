@@ -45,6 +45,10 @@ export class IotNode extends AWSTreeNodeBase {
         })
     }
 
+    public async getEndpoint(): Promise<string> {
+        return await this.iot.getEndpoint()
+    }
+
     public [inspect.custom](): string {
         return 'IotNode'
     }

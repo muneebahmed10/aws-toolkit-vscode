@@ -612,6 +612,7 @@ export class MockIotClient implements IotClient {
     public readonly listThingPrincipals: (
         request: ListThingCertificatesRequest
     ) => Promise<Iot.ListThingPrincipalsResponse>
+    public readonly getEndpoint: () => Promise<string>
 
     public constructor({
         regionCode = '',
@@ -639,6 +640,7 @@ export class MockIotClient implements IotClient {
             principals: [],
             nextToken: undefined,
         }),
+        getEndpoint = async () => '',
     }: {
         regionCode?: string
         listAllThings?(): Promise<Iot.ThingAttribute[]>
@@ -659,6 +661,7 @@ export class MockIotClient implements IotClient {
         deletePolicy?(request: DeletePolicyRequest): Promise<void>
         listThingsForCert?(request: ListThingsRequest): Promise<string[]>
         listThingPrincipals?(request: ListThingCertificatesRequest): Promise<Iot.ListThingPrincipalsResponse>
+        getEndpoint?(): Promise<string>
     }) {
         this.regionCode = regionCode
         this.listAllThings = listAllThings
@@ -679,6 +682,7 @@ export class MockIotClient implements IotClient {
         this.deletePolicy = deletePolicy
         this.listThingsForCert = listThingsForCert
         this.listThingPrincipals = listThingPrincipals
+        this.getEndpoint = getEndpoint
     }
 }
 

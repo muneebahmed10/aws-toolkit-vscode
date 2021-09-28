@@ -203,6 +203,7 @@
     "AWS.command.iot.deactivateCert": "Deactivate...",
     "AWS.command.iot.revokeCert": "Revoke...",
     "AWS.command.iot.detachCert": "Detach...",
+    "AWS.command.iot.copyEndpoint": "Copy Endpoint...",
     "AWS.command.s3.downloadFileAs": "Download As...",
     "AWS.command.s3.copyPath": "Copy Path",
     "AWS.command.s3.presignedURL": "Generate Presigned URL...",

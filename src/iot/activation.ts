@@ -26,6 +26,8 @@ import { attachCertificateCommand } from './commands/attachCertificate'
 import { attachPolicyCommand } from './commands/attachPolicy'
 import { IotPolicyFolderNode } from './explorer/iotPolicyFolderNode'
 import { createPolicyCommand } from './commands/createPolicy'
+import { IotNode } from './explorer/iotNodes'
+import { copyEndpointCommand } from './commands/copyEndpoint'
 
 /**
  * Activate API Gateway functionality for the extension.
@@ -75,6 +77,9 @@ export async function activate(activateArguments: {
         }),
         vscode.commands.registerCommand('aws.iot.revokeCert', async (node: IotCertificateNode) => {
             await revokeCertificateCommand(node)
+        }),
+        vscode.commands.registerCommand('aws.iot.copyEndpoint', async (node: IotNode) => {
+            await copyEndpointCommand(node)
         })
     )
 }

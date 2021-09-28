@@ -48,7 +48,7 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
     ) {
         //Show only 8 characters in the explorer instead of the full 64. The entire
         //ID can be copied from the context menu or viewed when hovered over.
-        super(certificate.id.substring(0, 8), collapsibleState)
+        super(certificate.id.substring(0, 8).concat('...'), collapsibleState)
         this.tooltip = localize(
             'AWS.explorerNode.iot.certTooltip',
             '{0}\nStatus: {1}\nCreated: {2}',

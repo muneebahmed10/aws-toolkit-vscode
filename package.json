@@ -805,6 +805,10 @@
                     "when": "false"
                 },
                 {
+                    "command": "aws.iot.copyEndpoint",
+                    "when": "false"
+                },
+                {
                     "command": "aws.s3.copyPath",
                     "when": "false"
                 },
@@ -1231,6 +1235,11 @@
                     "command": "aws.iot.revokeCert",
                     "when": "view == aws.explorer && viewItem =~ /^awsIotCertificateNode.(Things|Policies).(ACTIVE|INACTIVE)$/",
                     "group": "1@2"
+                },
+                {
+                    "command": "aws.iot.copyEndpoint",
+                    "when": "view == aws.explorer && viewItem == awsIotNode",
+                    "group": "2@1"
                 },
                 {
                     "command": "aws.copyName",
@@ -1697,6 +1706,16 @@
             {
                 "command": "aws.iot.detachPolicy",
                 "title": "%AWS.command.iot.detachCert%",
+                "category": "%AWS.title%",
+                "cloud9": {
+                    "cn": {
+                        "category": "%AWS.title.cn%"
+                    }
+                }
+            },
+            {
+                "command": "aws.iot.copyEndpoint",
+                "title": "%AWS.command.iot.copyEndpoint%",
                 "category": "%AWS.title%",
                 "cloud9": {
                     "cn": {

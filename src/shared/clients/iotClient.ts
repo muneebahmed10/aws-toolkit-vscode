@@ -16,6 +16,8 @@ export const DEFAULT_DELIMITER = '/'
 
 const MODE_RW_R_R = 420 //File permission 0644 rw-r--r-- for PEM files.
 const PEM_FILE_ENCODING = 'ascii'
+/* ATS is recommended over the deprecated Verisign certificates */
+const IOT_ENDPOINT_TYPE = 'iot:Data-ATS'
 
 export type IotThing = InterfaceNoSymbol<DefaultIotThing>
 export type IotCertificate = InterfaceNoSymbol<DefaultIotCertificate>
@@ -713,6 +715,31 @@ export class DefaultIotClient {
         }
 
         getLogger().debug('DeletePolicy successful')
+    }
+
+    /**
+     * Retrieves the account's IoT device data endpoint.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    public async getEndpoint(): Promise<string> {
+        getLogger().debug('GetEndpoint called')
+        const iot = await this.createIot()
+
+        let endpoint: string | undefined
+        try {
+            const output = await iot.describeEndpoint({ endpointType: IOT_ENDPOINT_TYPE }).promise()
+            endpoint = output.endpointAddress
+        } catch (e) {
+            getLogger().error('Failed to retrieve endpoint: %O', e)
+            throw e
+        }
+        if (!endpoint) {
+            throw new Error('Failed to retrieve endpoint')
+        }
+
+        getLogger().debug('GetEndpoint successful')
+        return endpoint
     }
 }
 
