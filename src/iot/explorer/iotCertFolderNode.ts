@@ -20,7 +20,7 @@ import { IotCertWithPoliciesNode } from './iotCertificateNode'
 import { IotNode } from './iotNodes'
 
 /**
- * Represents the group of all IoT Things.
+ * Represents the group of all IoT Certificates.
  */
 export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode {
     private readonly childLoader: ChildNodeLoader
@@ -64,7 +64,22 @@ export class IotCertsFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
             pageSize: this.getMaxItemsPerPage(),
         })
 
-        const newCerts = response.certificates.map(cert => new IotCertWithPoliciesNode(cert, this, this.iot))
+        const newCerts =
+            response.certificates
+                ?.filter(cert => cert.certificateArn && cert.certificateId && cert.status && cert.creationDate)
+                .map(
+                    cert =>
+                        new IotCertWithPoliciesNode(
+                            {
+                                arn: cert.certificateArn!,
+                                id: cert.certificateId!,
+                                activeStatus: cert.status!,
+                                creationDate: cert.creationDate!,
+                            },
+                            this,
+                            this.iot
+                        )
+                ) ?? []
 
         getLogger().debug(`Loaded certificates: %O`, newCerts)
         return {

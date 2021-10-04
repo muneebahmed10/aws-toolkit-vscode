@@ -35,6 +35,7 @@ export async function detachPolicyCommand(
         return undefined
     }
     const certId = node.parent.certificate.id
+    const certArn = node.parent.certificate.arn
 
     const isConfirmed = await showConfirmationMessage(
         {
@@ -51,7 +52,7 @@ export async function detachPolicyCommand(
 
     getLogger().info(`Detaching certificate ${certId}`)
     try {
-        await node.detachPolicy()
+        await node.iot.detachPolicy({ policyName: policyName, target: certArn })
 
         getLogger().info(`Successfully detached policy ${policyName}`)
         window.setStatusBarMessage(

@@ -41,7 +41,6 @@ export async function deleteThingCommand(
     )
     if (!isConfirmed) {
         getLogger().info('DeleteThing canceled')
-        //telemetry.recordS3DeleteObject({ result: 'Cancelled' })
         return
     }
 
@@ -63,14 +62,12 @@ export async function deleteThingCommand(
             addCodiconToString('trash', localize('AWS.iot.deleteThing.success', 'Deleted Thing {0}', node.thing.name)),
             DELETE_FILE_DISPLAY_TIMEOUT_MS
         )
-        //telemetry.recordS3DeleteObject({ result: 'Succeeded' })
     } catch (e) {
         getLogger().error(`Failed to delete Thing ${thingName}: %O`, e)
         showViewLogsMessage(
             localize('AWS.iot.deleteThing.error', 'Failed to delete Thing {0}', node.thing.name),
             window
         )
-        //telemetry.recordS3DeleteObject({ result: 'Failed' })
     }
 
     await refreshNode(node.parent, commands)

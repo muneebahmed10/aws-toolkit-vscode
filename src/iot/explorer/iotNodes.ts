@@ -16,9 +16,9 @@ import { IotCertsFolderNode } from './iotCertFolderNode'
 import { IotPolicyFolderNode } from './iotPolicyFolderNode'
 
 /**
- * An AWS Explorer node representing S3.
+ * An AWS Explorer node representing IoT.
  *
- * Contains buckets for a specific region as child nodes.
+ * Contains folders for Things, Certificates, and Policies as child nodes.
  */
 export class IotNode extends AWSTreeNodeBase {
     public readonly thingFolderNode: IotThingFolderNode

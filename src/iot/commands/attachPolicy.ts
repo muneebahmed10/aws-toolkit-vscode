@@ -10,9 +10,10 @@ import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
 import { showViewLogsMessage } from '../../shared/utilities/messages'
 import { createQuickPick, DataQuickPickItem } from '../../shared/ui/pickerPrompter'
-import { IotPolicy, ListPoliciesResponse } from '../../shared/clients/iotClient'
+import { DefaultIotPolicy, IotPolicy } from '../../shared/clients/iotClient'
 import { WizardControl } from '../../shared/wizards/wizard'
 import { IotCertWithPoliciesNode } from '../explorer/iotCertificateNode'
+import { Iot } from 'aws-sdk'
 
 /**
  * Attaches a policy to the certificate represented by the given node.
@@ -34,9 +35,15 @@ export async function attachPolicyCommand(
     let policies: IotPolicy[] = []
     do {
         try {
-            const policyResponse: ListPoliciesResponse = await node.iot.listPolicies({ marker: nextToken })
+            const policyResponse: Iot.ListPoliciesResponse = await node.iot.listPolicies({ marker: nextToken })
             nextToken = policyResponse.nextMarker
-            policies = policies.concat(policyResponse.policies)
+
+            const newPolicies =
+                policyResponse.policies
+                    ?.filter(policy => policy.policyArn && policy.policyName)
+                    .map(policy => new DefaultIotPolicy({ arn: policy.policyArn!, name: policy.policyName! })) ?? []
+
+            policies = policies.concat(newPolicies)
         } catch (e) {
             getLogger().error(`Failed to retrieve policies: %O`, e)
             showViewLogsMessage(localize('AWS.iot.attachPolicy.error', 'Failed to retrieve policies'), window)

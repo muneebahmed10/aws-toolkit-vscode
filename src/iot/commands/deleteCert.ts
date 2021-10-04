@@ -76,8 +76,8 @@ export async function deleteCertCommand(
 
     let forceDelete: boolean = false
     try {
-        const policies = await node.iot.listPolicies({ principal: certArn })
-        if (policies.policies.length > 0) {
+        const policies = (await node.iot.listPrincipalPolicies({ principal: certArn })).policies
+        if (policies?.length ?? 0 > 0) {
             forceDelete = await showConfirmationMessage(
                 {
                     prompt: localize(

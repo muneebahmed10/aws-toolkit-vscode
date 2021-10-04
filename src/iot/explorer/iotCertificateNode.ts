@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 import * as moment from 'moment'
 import { ChildNodePage } from '../../awsexplorer/childNodeLoader'
-import { IotClient, IotCertificate } from '../../shared/clients/iotClient'
+import { IotClient, IotCertificate, DefaultIotPolicy } from '../../shared/clients/iotClient'
 import { ext } from '../../shared/extensionGlobals'
 import { AWSResourceNode } from '../../shared/treeview/nodes/awsResourceNode'
 import { AWSTreeNodeBase } from '../../shared/treeview/nodes/awsTreeNodeBase'
@@ -22,6 +22,7 @@ import { getLogger } from '../../shared/logger'
 import { IotCertsFolderNode } from './iotCertFolderNode'
 import { IotThingNode } from './iotThingNode'
 import { IotPolicyNode } from './iotPolicyNode'
+import { LOCALIZED_DATE_FORMAT } from '../../shared/constants'
 
 const CONTEXT_BASE = 'awsIotCertificateNode'
 
@@ -30,15 +31,10 @@ const STATUS_ACTIVE = 'ACTIVE'
 const STATUS_INACTIVE = 'INACTIVE'
 
 /**
- * Shamelessly stolen from S3.
- */
-const S3_DATE_FORMAT = 'll LTS [GMT]ZZ'
-
-/**
  * Represents an IoT Certificate that may have either a Thing Node or the
  * Certificate Folder Node as a parent.
  */
-export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNode {
+export abstract class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNode {
     public constructor(
         public readonly certificate: IotCertificate,
         public readonly parent: IotCertsFolderNode | IotThingNode,
@@ -54,7 +50,7 @@ export class IotCertificateNode extends AWSTreeNodeBase implements AWSResourceNo
             '{0}\nStatus: {1}\nCreated: {2}',
             this.certificate.id,
             this.certificate.activeStatus,
-            moment(this.certificate.creationDate).format(S3_DATE_FORMAT)
+            moment(this.certificate.creationDate).format(LOCALIZED_DATE_FORMAT)
         )
         this.iconPath = {
             dark: vscode.Uri.file(ext.iconPaths.dark.certificate),
@@ -168,13 +164,23 @@ export class IotCertWithPoliciesNode extends IotCertificateNode implements LoadM
 
     private async loadPage(continuationToken: string | undefined): Promise<ChildNodePage> {
         getLogger().debug(`Loading page for %O using continuationToken %s`, this, continuationToken)
-        const response = await this.iot.listPolicies({
+        const response = await this.iot.listPrincipalPolicies({
             principal: this.certificate.arn,
             marker: continuationToken,
             pageSize: this.getMaxItemsPerPage(),
         })
 
-        const newPolicies = response.policies.map(policy => new IotPolicyNode(policy, this, this.iot))
+        const newPolicies =
+            response.policies
+                ?.filter(policy => policy.policyArn && policy.policyName)
+                .map(
+                    policy =>
+                        new IotPolicyNode(
+                            new DefaultIotPolicy({ arn: policy.policyArn!, name: policy.policyName! }),
+                            this,
+                            this.iot
+                        )
+                ) ?? []
 
         getLogger().debug(`Loaded policies: %O`, newPolicies)
         return {

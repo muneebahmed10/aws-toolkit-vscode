@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode'
-import { IotClient, UpdateThingRequest, CreateThingResponse } from '../../shared/clients/iotClient'
+import { IotClient } from '../../shared/clients/iotClient'
 import { AWSTreeNodeBase } from '../../shared/treeview/nodes/awsTreeNodeBase'
 import { ErrorNode } from '../../shared/treeview/nodes/errorNode'
 import { LoadMoreNode } from '../../shared/treeview/nodes/loadMoreNode'
@@ -64,20 +64,18 @@ export class IotThingFolderNode extends AWSTreeNodeBase implements LoadMoreNode 
             maxResults: this.getMaxItemsPerPage(),
         })
 
-        const newThings = response.things.map(thing => new IotThingNode(thing, this, this.iot))
+        let newThings: IotThingNode[] = []
+        if (response.things) {
+            newThings = response.things
+                .filter(thing => thing.thingName && thing.thingArn)
+                .map(thing => new IotThingNode({ name: thing.thingName!, arn: thing.thingArn! }, this, this.iot))
+        }
 
         getLogger().debug(`Loaded things: %O`, newThings)
         return {
             newContinuationToken: response.nextToken ?? undefined,
             newChildren: [...newThings],
         }
-    }
-
-    /**
-     * See {@link IotClient.createThing}
-     */
-    public async createThing(request: UpdateThingRequest): Promise<CreateThingResponse> {
-        return this.iot.createThing(request)
     }
 
     public [inspect.custom](): string {

@@ -238,10 +238,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         await activateCloudWatchLogs(context, toolkitSettings)
 
-        await activateIot({
-            extContext: extContext,
-            outputChannel: remoteInvokeOutputChannel,
-        })
+        await activateIot(extContext)
 
         // Features which aren't currently functional in Cloud9
         if (!isCloud9()) {

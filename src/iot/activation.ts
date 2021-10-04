@@ -32,11 +32,8 @@ import { copyEndpointCommand } from './commands/copyEndpoint'
 /**
  * Activate API Gateway functionality for the extension.
  */
-export async function activate(activateArguments: {
-    extContext: ExtContext
-    outputChannel: vscode.OutputChannel
-}): Promise<void> {
-    const extensionContext = activateArguments.extContext.extensionContext
+export async function activate(context: ExtContext): Promise<void> {
+    const extensionContext = context.extensionContext
 
     extensionContext.subscriptions.push(
         vscode.commands.registerCommand('aws.iot.createThing', async (node: IotThingFolderNode) => {

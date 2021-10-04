@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode'
-import { IotClient } from '../../shared/clients/iotClient'
+import { DefaultIotPolicy, IotClient } from '../../shared/clients/iotClient'
 import { AWSTreeNodeBase } from '../../shared/treeview/nodes/awsTreeNodeBase'
 import { ErrorNode } from '../../shared/treeview/nodes/errorNode'
 import { LoadMoreNode } from '../../shared/treeview/nodes/loadMoreNode'
@@ -20,7 +20,7 @@ import { IotPolicyNode } from './iotPolicyNode'
 import { IotNode } from './iotNodes'
 
 /**
- * Represents the group of all IoT Things.
+ * Represents the group of all IoT Policies.
  */
 export class IotPolicyFolderNode extends AWSTreeNodeBase implements LoadMoreNode {
     private readonly childLoader: ChildNodeLoader
@@ -63,8 +63,17 @@ export class IotPolicyFolderNode extends AWSTreeNodeBase implements LoadMoreNode
             marker: continuationToken,
             pageSize: this.getMaxItemsPerPage(),
         })
-
-        const newPolicies = response.policies.map(policy => new IotPolicyNode(policy, this, this.iot))
+        const newPolicies =
+            response.policies
+                ?.filter(policy => policy.policyArn && policy.policyName)
+                .map(
+                    policy =>
+                        new IotPolicyNode(
+                            new DefaultIotPolicy({ arn: policy.policyArn!, name: policy.policyName! }),
+                            this,
+                            this.iot
+                        )
+                ) ?? []
 
         getLogger().debug(`Loaded policies: %O`, newPolicies)
         return {

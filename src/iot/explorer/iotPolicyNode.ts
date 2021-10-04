@@ -34,16 +34,6 @@ export class IotPolicyNode extends AWSTreeNodeBase implements AWSResourceNode {
     }
 
     /**
-     * See {@link IotClient.detachPolicy}
-     */
-    public async detachPolicy(): Promise<void> {
-        if (this.parent instanceof IotPolicyFolderNode) {
-            return undefined
-        }
-        await this.iot.detachPolicy({ policyName: this.policy.name, target: this.parent.certificate.arn })
-    }
-
-    /**
      * See {@link IotClient.deletePolicy}
      */
     public async deletePolicy(): Promise<void> {

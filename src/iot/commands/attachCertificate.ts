@@ -11,8 +11,9 @@ import { Window } from '../../shared/vscode/window'
 import { IotThingNode } from '../explorer/iotThingNode'
 import { showViewLogsMessage } from '../../shared/utilities/messages'
 import { createQuickPick, DataQuickPickItem } from '../../shared/ui/pickerPrompter'
-import { IotCertificate, ListCertificatesResponse } from '../../shared/clients/iotClient'
+import { DefaultIotCertificate, IotCertificate } from '../../shared/clients/iotClient'
 import { WizardControl } from '../../shared/wizards/wizard'
+import { Iot } from 'aws-sdk'
 
 /**
  * Attaches a certificate to the thing represented by the given node.
@@ -34,9 +35,23 @@ export async function attachCertificateCommand(
     let certificates: IotCertificate[] = []
     do {
         try {
-            const certResponse: ListCertificatesResponse = await node.iot.listCertificates({ marker: nextToken })
+            const certResponse: Iot.ListCertificatesResponse = await node.iot.listCertificates({ marker: nextToken })
             nextToken = certResponse.nextMarker
-            certificates = certificates.concat(certResponse.certificates)
+
+            const newCerts =
+                certResponse.certificates
+                    ?.filter(cert => cert.certificateArn && cert.certificateId && cert.status && cert.creationDate)
+                    .map(
+                        cert =>
+                            new DefaultIotCertificate({
+                                arn: cert.certificateArn!,
+                                id: cert.certificateId!,
+                                activeStatus: cert.status!,
+                                creationDate: cert.creationDate!,
+                            })
+                    ) ?? []
+
+            certificates = certificates.concat(newCerts)
         } catch (e) {
             getLogger().error(`Failed to retrieve certificates: %O`, e)
             showViewLogsMessage(localize('AWS.iot.attachCert.error', 'Failed to retrieve certificates'), window)

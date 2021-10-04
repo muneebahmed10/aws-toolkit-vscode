@@ -31,21 +31,18 @@ export async function createThingCommand(
 
     if (!thingName) {
         getLogger().info('CreateThing canceled')
-        //telemetry.recordS3CreateBucket({ result: 'Cancelled' })
         return
     }
 
     getLogger().info(`Creating thing: ${thingName}`)
     try {
-        const thing = await node.createThing({ thingName })
+        const thing = await node.iot.createThing({ thingName })
 
         getLogger().info('Created thing: %O', thing)
         window.showInformationMessage(localize('AWS.iot.createThing.success', 'Created Thing {0}', thingName))
-        //telemetry.recordS3CreateBucket({ result: 'Succeeded' })
     } catch (e) {
         getLogger().error(`Failed to create Thing ${thingName}: %O`, e)
         showViewLogsMessage(localize('AWS.iot.createThing.error', 'Failed to create Thing: {0}', thingName), window)
-        //telemetry.recordS3CreateBucket({ result: 'Failed' })
     }
 
     await refreshNode(node, commands)
