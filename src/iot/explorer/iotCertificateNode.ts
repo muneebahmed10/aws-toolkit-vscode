@@ -25,11 +25,6 @@ import { IotPolicyNode } from './iotPolicyNode'
 import { LOCALIZED_DATE_FORMAT } from '../../shared/constants'
 
 const CONTEXT_BASE = 'awsIotCertificateNode'
-
-const STATUS_REVOKED = 'REVOKED'
-const STATUS_ACTIVE = 'ACTIVE'
-const STATUS_INACTIVE = 'INACTIVE'
-
 /**
  * Represents an IoT Certificate that may have either a Thing Node or the
  * Certificate Folder Node as a parent.
@@ -60,34 +55,6 @@ export abstract class IotCertificateNode extends AWSTreeNodeBase implements AWSR
         this.contextValue = `${CONTEXT_BASE}.${this.certificate.activeStatus}`
     }
 
-    /**
-     * See {@link IotClient.updateCertificate}
-     */
-    public async activate(): Promise<void> {
-        await this.iot.updateCertificate({ certificateId: this.certificate.id, newStatus: STATUS_ACTIVE })
-    }
-
-    /**
-     * See {@link IotClient.updateCertificate}
-     */
-    public async deactivate(): Promise<void> {
-        await this.iot.updateCertificate({ certificateId: this.certificate.id, newStatus: STATUS_INACTIVE })
-    }
-
-    /**
-     * See {@link IotClient.updateCertificate}
-     */
-    public async revoke(): Promise<void> {
-        await this.iot.updateCertificate({ certificateId: this.certificate.id, newStatus: STATUS_REVOKED })
-    }
-
-    /**
-     * See {@link IotClient.attachPolicy}
-     */
-    public async attachPolicy(policyName: string): Promise<void> {
-        await this.iot.attachPolicy({ policyName: policyName, target: this.certificate.arn })
-    }
-
     public update(): void {
         return undefined
     }
@@ -114,13 +81,6 @@ export class IotThingCertNode extends IotCertificateNode {
     ) {
         super(certificate, parent, iot, vscode.TreeItemCollapsibleState.None, workspace)
         this.contextValue = `${CONTEXT_BASE}.Things.${this.certificate.activeStatus}`
-    }
-
-    /**
-     * See {@link IotClient.detachThingPrincipal}
-     */
-    public async detachThing(): Promise<void> {
-        await this.iot.detachThingPrincipal({ thingName: this.parent.thing.name, principal: this.certificate.arn })
     }
 }
 
@@ -187,10 +147,6 @@ export class IotCertWithPoliciesNode extends IotCertificateNode implements LoadM
             newContinuationToken: response.nextMarker ?? undefined,
             newChildren: [...newPolicies],
         }
-    }
-
-    public async deleteCertificate(forceDelete: boolean): Promise<void> {
-        await this.iot.deleteCertificate({ certificateId: this.certificate.id, forceDelete: forceDelete })
     }
 
     private getMaxItemsPerPage(): number | undefined {

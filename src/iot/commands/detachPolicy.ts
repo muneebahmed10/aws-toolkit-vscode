@@ -14,7 +14,7 @@ import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utili
 import { IotPolicyNode } from '../explorer/iotPolicyNode'
 import { IotPolicyFolderNode } from '../explorer/iotPolicyFolderNode'
 
-const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
+const DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Detaches an IoT Policy from a certificate.
@@ -57,7 +57,7 @@ export async function detachPolicyCommand(
         getLogger().info(`Successfully detached policy ${policyName}`)
         window.setStatusBarMessage(
             addCodiconToString('trash', localize('AWS.iot.detachPolicy.success', 'Detached {0}', node.policy.name)),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to detach certificate ${certId}: %O`, e)

@@ -13,7 +13,7 @@ import { IotThingCertNode } from '../explorer/iotCertificateNode'
 import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotThingNode } from '../explorer/iotThingNode'
 
-const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
+const DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Detaches a certificate from an IoT Thing.
@@ -30,6 +30,7 @@ export async function detachThingCertCommand(
     getLogger().debug('DetachCert called for %O', node)
 
     const certId = node.certificate.id
+    const certArn = node.certificate.arn
     const thingName = node.parent.thing.name
 
     const isConfirmed = await showConfirmationMessage(
@@ -51,12 +52,12 @@ export async function detachThingCertCommand(
 
     getLogger().info(`Detaching certificate ${certId}`)
     try {
-        await node.detachThing()
+        await node.iot.detachThingPrincipal({ thingName: thingName, principal: certArn })
 
         getLogger().info(`Successfully detached certificate from Thing ${thingName}`)
         window.setStatusBarMessage(
             addCodiconToString('trash', localize('AWS.iot.detachCert.success', 'Detached {0}', node.certificate.id)),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to detach certificate ${certId}: %O`, e)

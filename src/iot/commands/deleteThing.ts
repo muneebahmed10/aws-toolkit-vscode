@@ -13,7 +13,7 @@ import { IotThingNode } from '../explorer/iotThingNode'
 import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotThingFolderNode } from '../explorer/iotThingFolderNode'
 
-const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
+const DELETE_DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Deletes the thing represented by the given node.
@@ -55,12 +55,12 @@ export async function deleteThingCommand(
             )
             return undefined
         }
-        await node.deleteThing()
+        await node.iot.deleteThing({ thingName: thingName })
 
         getLogger().info(`Successfully deleted Thing ${thingName}`)
         window.setStatusBarMessage(
             addCodiconToString('trash', localize('AWS.iot.deleteThing.success', 'Deleted Thing {0}', node.thing.name)),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DELETE_DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to delete Thing ${thingName}: %O`, e)

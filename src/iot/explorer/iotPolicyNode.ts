@@ -33,13 +33,6 @@ export class IotPolicyNode extends AWSTreeNodeBase implements AWSResourceNode {
         this.contextValue = `awsIotPolicyNode.${this.parent.contextValue}`
     }
 
-    /**
-     * See {@link IotClient.deletePolicy}
-     */
-    public async deletePolicy(): Promise<void> {
-        await this.iot.deletePolicy({ policyName: this.policy.name })
-    }
-
     public get arn(): string {
         return this.policy.arn
     }

@@ -16,7 +16,11 @@ import { IotThingFolderNode } from '../explorer/iotThingFolderNode'
 import { IotCertsFolderNode } from '../explorer/iotCertFolderNode'
 import { IotNode } from '../explorer/iotNodes'
 
-const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
+const DISPLAY_TIMEOUT_MS = 2000
+
+const STATUS_REVOKED = 'REVOKED'
+const STATUS_ACTIVE = 'ACTIVE'
+const STATUS_INACTIVE = 'INACTIVE'
 
 /**
  * Deactivates an active certificate.
@@ -53,7 +57,7 @@ export async function deactivateCertificateCommand(
 
     getLogger().info(`Deactivating certificate ${certId}`)
     try {
-        await node.deactivate()
+        await node.iot.updateCertificate({ certificateId: certId, newStatus: STATUS_INACTIVE })
 
         getLogger().info(`Successfully deactivated certificate ${certId}`)
         window.setStatusBarMessage(
@@ -61,7 +65,7 @@ export async function deactivateCertificateCommand(
                 'trash',
                 localize('AWS.iot.deactivateCert.success', 'Deactivated {0}', node.certificate.id)
             ),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to deactivate certificate ${certId}: %O`, e)
@@ -113,12 +117,12 @@ export async function activateCertificateCommand(
 
     getLogger().info(`Activating certificate ${certId}`)
     try {
-        await node.activate()
+        await node.iot.updateCertificate({ certificateId: certId, newStatus: STATUS_ACTIVE })
 
         getLogger().info(`Successfully activated certificate ${certId}`)
         window.setStatusBarMessage(
             addCodiconToString('trash', localize('AWS.iot.activateCert.success', 'Activated {0}', node.certificate.id)),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to activate certificate ${certId}: %O`, e)
@@ -166,12 +170,12 @@ export async function revokeCertificateCommand(
 
     getLogger().info(`Revoking certificate ${certId}`)
     try {
-        await node.revoke()
+        await node.iot.updateCertificate({ certificateId: certId, newStatus: STATUS_REVOKED })
 
         getLogger().info(`Successfully revoked certificate ${certId}`)
         window.setStatusBarMessage(
             addCodiconToString('trash', localize('AWS.iot.revokeCert.success', 'Revoked {0}', node.certificate.id)),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to revoke certificate ${certId}: %O`, e)

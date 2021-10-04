@@ -13,7 +13,7 @@ import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utili
 import { IotCertWithPoliciesNode } from '../explorer/iotCertificateNode'
 import { IotCertsFolderNode } from '../explorer/iotCertFolderNode'
 
-const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
+const DELETE_DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Deletes the certificate represented by the given node.
@@ -105,7 +105,7 @@ export async function deleteCertCommand(
 
     getLogger().info(`Deleting certificate ${node.certificate.id}`)
     try {
-        await node.deleteCertificate(forceDelete)
+        await node.iot.deleteCertificate({ certificateId: node.certificate.id, forceDelete: forceDelete })
 
         getLogger().info(`Successfully deleted Certificate ${node.certificate.id}`)
         window.setStatusBarMessage(
@@ -113,7 +113,7 @@ export async function deleteCertCommand(
                 'trash',
                 localize('AWS.iot.deleteCert.success', 'Deleted Certificate {0}', node.certificate.id)
             ),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DELETE_DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to delete Certificate ${node.certificate.id}: %O`, e)

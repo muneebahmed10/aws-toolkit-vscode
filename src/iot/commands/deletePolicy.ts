@@ -14,7 +14,7 @@ import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utili
 import { IotPolicyFolderNode } from '../explorer/iotPolicyFolderNode'
 import { IotCertWithPoliciesNode } from '../explorer/iotCertificateNode'
 
-const DELETE_FILE_DISPLAY_TIMEOUT_MS = 2000
+const DELETE_DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Deletes the policy represented by the given node.
@@ -53,7 +53,7 @@ export async function deletePolicyCommand(
 
     getLogger().info(`Deleting policy ${policyName}`)
     try {
-        await node.deletePolicy()
+        await node.iot.deletePolicy({ policyName: policyName })
 
         getLogger().info(`Successfully deleted Policy ${policyName}`)
         window.setStatusBarMessage(
@@ -61,7 +61,7 @@ export async function deletePolicyCommand(
                 'trash',
                 localize('AWS.iot.deletePolicy.success', 'Deleted Policy {0}', node.policy.name)
             ),
-            DELETE_FILE_DISPLAY_TIMEOUT_MS
+            DELETE_DISPLAY_TIMEOUT_MS
         )
     } catch (e) {
         getLogger().error(`Failed to delete Policy ${policyName}: %O`, e)
