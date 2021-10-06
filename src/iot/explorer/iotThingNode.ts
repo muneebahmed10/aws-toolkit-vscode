@@ -72,7 +72,22 @@ export class IotThingNode extends AWSTreeNodeBase implements AWSResourceNode, Lo
             maxResults: this.getMaxItemsPerPage(),
         })
 
-        const newCerts = response.certificates.map(cert => new IotThingCertNode(cert, this, this.iot))
+        const newCerts =
+            response.certificates
+                ?.filter(cert => cert.certificateArn && cert.certificateId && cert.status && cert.creationDate)
+                .map(
+                    cert =>
+                        new IotThingCertNode(
+                            {
+                                arn: cert.certificateArn!,
+                                id: cert.certificateId!,
+                                activeStatus: cert.status!,
+                                creationDate: cert.creationDate!,
+                            },
+                            this,
+                            this.iot
+                        )
+                ) ?? []
 
         getLogger().debug(`Loaded certificates: %O`, newCerts)
         return {

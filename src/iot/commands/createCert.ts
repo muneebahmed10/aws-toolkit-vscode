@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode'
 import * as localizedText from '../../shared/localizedText'
+import * as fs from 'fs-extra'
 import { getLogger } from '../../shared/logger'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
@@ -13,8 +14,11 @@ import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utili
 import { IotCertsFolderNode } from '../explorer/iotCertFolderNode'
 import { fileExists } from '../../shared/filesystemUtilities'
 
+const MODE_RW_R_R = 420 //File permission 0644 rw-r--r-- for PEM files.
+const PEM_FILE_ENCODING = 'ascii'
+
 /**
- * Wizard to create a certificate key pair and save them to the filesystem.
+ * Command to create a certificate key pair and save them to the filesystem.
  */
 export async function createCertificateCommand(
     node: IotCertsFolderNode,
@@ -36,7 +40,7 @@ export async function createCertificateCommand(
         return
     }
 
-    const folderLocation = await promptForFolderLocation(window)
+    const folderLocation = await promptForSaveLocation(window)
     if (!folderLocation) {
         getLogger().info('CreateCertificate canceled: No folder selected')
         return
@@ -65,23 +69,39 @@ export async function createCertificateCommand(
         return undefined
     }
 
+    let certId: string | undefined
+    let certPem: string | undefined
+    let privateKey: string | undefined
+    let publicKey: string | undefined
     try {
-        await node.iot.createCertificateAndKeys({
-            certPath: certPath,
-            privateKeyPath: privateKeyPath,
-            publicKeyPath: publicKeyPath,
-            active: false,
+        const certificate = await node.iot.createCertificateAndKeys({
+            setAsActive: false,
         })
+        certId = certificate.certificateId
+        certPem = certificate.certificatePem
+        privateKey = certificate.keyPair?.PrivateKey
+        publicKey = certificate.keyPair?.PublicKey
+
+        if (!certPem || !privateKey || !publicKey) {
+            getLogger().error('Could not download certificate')
+            showViewLogsMessage(localize('AWS.iot.createCert.error', 'Failed to create certificate'), window)
+            return undefined
+        }
+
+        //Save resources
+        await fs.writeFile(certPath, certPem, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
+        await fs.writeFile(privateKeyPath, privateKey, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
+        await fs.writeFile(publicKeyPath, publicKey, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
+        getLogger().info(`Downloaded certificate ${certId}`)
     } catch (e) {
         getLogger().error('Failed to create and save certificate: %O', e)
         showViewLogsMessage(localize('AWS.iot.createCert.error', 'Failed to create certificate'), window)
-        throw e
     }
 
     await refreshNode(node, commands)
 }
 
-async function promptForFolderLocation(window: Window): Promise<vscode.Uri | undefined> {
+async function promptForSaveLocation(window: Window): Promise<vscode.Uri | undefined> {
     // const folderLocation = await window.showOpenDialog({
     //     openLabel: localize('AWS.iot.downloadCert.openButton', 'Save certificate here'),
     //     canSelectFolders: true,

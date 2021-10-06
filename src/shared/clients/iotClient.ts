@@ -4,7 +4,6 @@
  */
 
 import * as _ from 'lodash'
-import * as fs from 'fs-extra'
 import { Iot } from 'aws-sdk'
 import { inspect } from 'util'
 import { ext } from '../extensionGlobals'
@@ -14,8 +13,6 @@ import { InterfaceNoSymbol } from '../utilities/tsUtils'
 export const DEFAULT_MAX_THINGS = 250 // 250 is the maximum allowed by the API
 export const DEFAULT_DELIMITER = '/'
 
-const MODE_RW_R_R = 420 //File permission 0644 rw-r--r-- for PEM files.
-const PEM_FILE_ENCODING = 'ascii'
 /* ATS is recommended over the deprecated Verisign certificates */
 const IOT_ENDPOINT_TYPE = 'iot:Data-ATS'
 
@@ -28,20 +25,8 @@ export type IotClient = InterfaceNoSymbol<DefaultIotClient>
 const CERT_ARN_PATTERN = /arn:aws:iot:\S+?:\d+:cert\/(\w+)/
 
 export interface ListThingCertificatesResponse {
-    readonly certificates: IotCertificate[]
+    readonly certificates: Iot.CertificateDescription[]
     readonly nextToken: string | undefined
-}
-
-export interface CreateCertificateRequest {
-    readonly active: boolean
-    readonly certPath: string
-    readonly privateKeyPath: string
-    readonly publicKeyPath: string
-}
-
-export interface CreatePolicyRequest {
-    readonly policyName: Iot.PolicyName
-    readonly documentPath: string
 }
 
 export class DefaultIotClient {
@@ -197,6 +182,26 @@ export class DefaultIotClient {
     }
 
     /**
+     * Describes a certificate given the certificate ID.
+     *
+     * @throws Error if there is an error calling IoT.
+     */
+    private async describeCertificate(
+        request: Iot.DescribeCertificateRequest
+    ): Promise<Iot.DescribeCertificateResponse> {
+        const iot = await this.createIot()
+
+        let output: Iot.DescribeCertificateResponse
+        try {
+            output = await iot.describeCertificate(request).promise()
+        } catch (e) {
+            getLogger().error('Failed to describe certificate: %O', e)
+            throw e
+        }
+        return output
+    }
+
+    /**
      * Lists all IoT certificates attached to IoT Thing.
      *
      * listThingPrincipals() returns ARNS of principals that may be X.509
@@ -210,57 +215,27 @@ export class DefaultIotClient {
         request: Iot.ListThingPrincipalsRequest
     ): Promise<ListThingCertificatesResponse> {
         getLogger().debug('ListThingCertificates called with request: %O', request)
-        const iot = await this.createIot()
 
         const output = await this.listThingPrincipals(request)
         const iotPrincipals: Iot.Principal[] = output.principals ?? []
         const nextToken = output.nextToken
 
-        const allCertPromises: Promise<IotCertificate | undefined>[] = iotPrincipals.map(async iotPrincipal => {
+        const describedCerts = iotPrincipals.map(async iotPrincipal => {
             const certIdFound = iotPrincipal.match(CERT_ARN_PATTERN)
             if (!certIdFound) {
                 return undefined
             }
             const certId = certIdFound[1]
-            let activationStatus: string | undefined
-            let certDate: Iot.CreationDate | undefined
-
-            //Make a request to get the status of the certificate
-            try {
-                const certificate = await iot
-                    .describeCertificate({
-                        certificateId: certId,
-                    })
-                    .promise()
-                activationStatus = certificate.certificateDescription?.status
-                certDate = certificate.certificateDescription?.creationDate
-            } catch (e) {
-                getLogger().error('Failed to describe thing certificate: %O', e)
-                throw e
-            }
-
-            if (!activationStatus || !certDate) {
-                return undefined
-            }
-
-            return new DefaultIotCertificate({
-                arn: iotPrincipal,
-                id: certId,
-                activeStatus: activationStatus,
-                creationDate: certDate,
-            })
+            return this.describeCertificate({ certificateId: certId })
         })
 
-        const allCerts = await Promise.all(allCertPromises)
-        const filteredCerts = _(allCerts)
-            .reject(cert => cert === undefined)
-            // we don't have a filerNotNull so we can filter then cast
-            .map(cert => cert as IotCertificate)
-            .value()
+        const resolvedCerts = (await Promise.all(describedCerts))
+            .filter(cert => cert?.certificateDescription != undefined)
+            .map(cert => cert?.certificateDescription as Iot.CertificateDescription)
 
-        const response: ListThingCertificatesResponse = { certificates: filteredCerts, nextToken: nextToken }
+        const response: ListThingCertificatesResponse = { certificates: resolvedCerts, nextToken: nextToken }
         getLogger().debug('ListThingCertificates returned response: %O', response)
-        return { certificates: filteredCerts, nextToken: nextToken }
+        return { certificates: resolvedCerts, nextToken: nextToken }
     }
 
     /**
@@ -297,46 +272,22 @@ export class DefaultIotClient {
      *
      * @throws Error if there is an error calling IoT.
      */
-    public async createCertificateAndKeys(request: CreateCertificateRequest): Promise<void> {
+    public async createCertificateAndKeys(
+        request: Iot.CreateKeysAndCertificateRequest
+    ): Promise<Iot.CreateKeysAndCertificateResponse> {
         getLogger().debug('CreateCertificate called with request: %O', request)
         const iot = await this.createIot()
 
-        let certId: string | undefined
-        let certPem: string | undefined
-        let privateKey: string | undefined
-        let publicKey: string | undefined
+        let output: Iot.CreateKeysAndCertificateResponse
         try {
-            const output = await iot
-                .createKeysAndCertificate({
-                    setAsActive: request.active,
-                })
-                .promise()
-            certId = output.certificateId
-            certPem = output.certificatePem
-            privateKey = output.keyPair?.PrivateKey
-            publicKey = output.keyPair?.PublicKey
+            output = await iot.createKeysAndCertificate(request).promise()
         } catch (e) {
             getLogger().error('Failed to create certificate and keys: %O', e)
             throw e
         }
 
-        if (!certPem || !privateKey || !publicKey) {
-            getLogger().error('Could not download certificate')
-            return undefined
-        }
-
-        //Save resources
-        try {
-            await fs.writeFile(request.certPath, certPem, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
-            await fs.writeFile(request.privateKeyPath, privateKey, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
-            await fs.writeFile(request.publicKeyPath, publicKey, { encoding: PEM_FILE_ENCODING, mode: MODE_RW_R_R })
-        } catch (e) {
-            getLogger().error('Failed to write files: %O', e)
-            throw e
-        }
-        getLogger().info(`Downloaded certificate ${certId}`)
-
         getLogger().debug('CreateCertificate succeeded')
+        return output
     }
 
     /**
@@ -519,21 +470,13 @@ export class DefaultIotClient {
      *
      * @throws Error if there is an error calling IoT.
      */
-    public async createPolicy(request: CreatePolicyRequest): Promise<void> {
+    public async createPolicy(request: Iot.CreatePolicyRequest): Promise<void> {
         getLogger().debug('CreatePolicy called with request: %O', request)
         const iot = await this.createIot()
 
         let policyArn: string | undefined
         try {
-            const data = await fs.readFile(request.documentPath)
-            //Parse to ensure this is a valid JSON
-            const policyDocument = JSON.parse(data.toString())
-            const output = await iot
-                .createPolicy({
-                    policyName: request.policyName,
-                    policyDocument: JSON.stringify(policyDocument),
-                })
-                .promise()
+            const output = await iot.createPolicy(request).promise()
             policyArn = output.policyArn
         } catch (e) {
             getLogger().error('Failed to create policy: %O', e)

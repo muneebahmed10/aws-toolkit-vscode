@@ -4,6 +4,7 @@
  */
 
 import * as vscode from 'vscode'
+import * as fs from 'fs-extra'
 import { getLogger } from '../../shared/logger'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
@@ -38,7 +39,10 @@ export async function createPolicyCommand(
     }
 
     try {
-        await node.iot.createPolicy({ policyName: policyName, documentPath: fileLocation.fsPath })
+        const data = await fs.readFile(fileLocation.fsPath)
+        //Parse to ensure this is a valid JSON
+        const policyDocument = JSON.parse(data.toString())
+        await node.iot.createPolicy({ policyName: policyName, policyDocument: JSON.stringify(policyDocument) })
     } catch (e) {
         getLogger().error('Failed to create policy document: %O', e)
         showViewLogsMessage(localize('AWS.iot.createPolicy.error', 'Failed to create policy'), window)
