@@ -5,7 +5,6 @@
 
 import * as localizedText from '../../shared/localizedText'
 import { getLogger } from '../../shared/logger'
-import { addCodiconToString } from '../../shared/utilities/textUtilities'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
@@ -13,8 +12,6 @@ import { IotCertWithPoliciesNode } from '../explorer/iotCertificateNode'
 import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotPolicyNode } from '../explorer/iotPolicyNode'
 import { IotPolicyFolderNode } from '../explorer/iotPolicyFolderNode'
-
-const DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Detaches an IoT Policy from a certificate.
@@ -55,10 +52,7 @@ export async function detachPolicyCommand(
         await node.iot.detachPolicy({ policyName: policyName, target: certArn })
 
         getLogger().info(`Successfully detached policy ${policyName}`)
-        window.setStatusBarMessage(
-            addCodiconToString('trash', localize('AWS.iot.detachPolicy.success', 'Detached {0}', node.policy.name)),
-            DISPLAY_TIMEOUT_MS
-        )
+        window.showInformationMessage(localize('AWS.iot.detachPolicy.success', 'Detached {0}', node.policy.name))
     } catch (e) {
         getLogger().error(`Failed to detach certificate ${certId}: %O`, e)
         showViewLogsMessage(localize('AWS.iot.detachPolicy.error', 'Failed to detach {0}', node.policy.name), window)

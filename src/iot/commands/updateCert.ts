@@ -5,7 +5,6 @@
 
 import * as localizedText from '../../shared/localizedText'
 import { getLogger } from '../../shared/logger'
-import { addCodiconToString } from '../../shared/utilities/textUtilities'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
@@ -15,8 +14,6 @@ import { IotThingNode } from '../explorer/iotThingNode'
 import { IotThingFolderNode } from '../explorer/iotThingFolderNode'
 import { IotCertsFolderNode } from '../explorer/iotCertFolderNode'
 import { IotNode } from '../explorer/iotNodes'
-
-const DISPLAY_TIMEOUT_MS = 2000
 
 const STATUS_REVOKED = 'REVOKED'
 const STATUS_ACTIVE = 'ACTIVE'
@@ -60,12 +57,8 @@ export async function deactivateCertificateCommand(
         await node.iot.updateCertificate({ certificateId: certId, newStatus: STATUS_INACTIVE })
 
         getLogger().info(`Successfully deactivated certificate ${certId}`)
-        window.setStatusBarMessage(
-            addCodiconToString(
-                'trash',
-                localize('AWS.iot.deactivateCert.success', 'Deactivated {0}', node.certificate.id)
-            ),
-            DISPLAY_TIMEOUT_MS
+        window.showInformationMessage(
+            localize('AWS.iot.deactivateCert.success', 'Deactivated {0}', node.certificate.id)
         )
     } catch (e) {
         getLogger().error(`Failed to deactivate certificate ${certId}: %O`, e)
@@ -120,10 +113,7 @@ export async function activateCertificateCommand(
         await node.iot.updateCertificate({ certificateId: certId, newStatus: STATUS_ACTIVE })
 
         getLogger().info(`Successfully activated certificate ${certId}`)
-        window.setStatusBarMessage(
-            addCodiconToString('trash', localize('AWS.iot.activateCert.success', 'Activated {0}', node.certificate.id)),
-            DISPLAY_TIMEOUT_MS
-        )
+        window.showInformationMessage(localize('AWS.iot.activateCert.success', 'Activated {0}', node.certificate.id))
     } catch (e) {
         getLogger().error(`Failed to activate certificate ${certId}: %O`, e)
         showViewLogsMessage(
@@ -173,10 +163,7 @@ export async function revokeCertificateCommand(
         await node.iot.updateCertificate({ certificateId: certId, newStatus: STATUS_REVOKED })
 
         getLogger().info(`Successfully revoked certificate ${certId}`)
-        window.setStatusBarMessage(
-            addCodiconToString('trash', localize('AWS.iot.revokeCert.success', 'Revoked {0}', node.certificate.id)),
-            DISPLAY_TIMEOUT_MS
-        )
+        window.showInformationMessage(localize('AWS.iot.revokeCert.success', 'Revoked {0}', node.certificate.id))
     } catch (e) {
         getLogger().error(`Failed to revoke certificate ${certId}: %O`, e)
         showViewLogsMessage(localize('AWS.iot.revokeCert.error', 'Failed to revoke {0}', node.certificate.id), window)

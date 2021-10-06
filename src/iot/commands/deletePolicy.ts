@@ -5,7 +5,6 @@
 
 import * as localizedText from '../../shared/localizedText'
 import { getLogger } from '../../shared/logger'
-import { addCodiconToString } from '../../shared/utilities/textUtilities'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
@@ -13,8 +12,6 @@ import { IotPolicyNode } from '../explorer/iotPolicyNode'
 import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotPolicyFolderNode } from '../explorer/iotPolicyFolderNode'
 import { IotCertWithPoliciesNode } from '../explorer/iotCertificateNode'
-
-const DELETE_DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Deletes the policy represented by the given node.
@@ -56,13 +53,7 @@ export async function deletePolicyCommand(
         await node.iot.deletePolicy({ policyName: policyName })
 
         getLogger().info(`Successfully deleted Policy ${policyName}`)
-        window.setStatusBarMessage(
-            addCodiconToString(
-                'trash',
-                localize('AWS.iot.deletePolicy.success', 'Deleted Policy {0}', node.policy.name)
-            ),
-            DELETE_DISPLAY_TIMEOUT_MS
-        )
+        window.showInformationMessage(localize('AWS.iot.deletePolicy.success', 'Deleted Policy {0}', node.policy.name))
     } catch (e) {
         getLogger().error(`Failed to delete Policy ${policyName}: %O`, e)
         showViewLogsMessage(

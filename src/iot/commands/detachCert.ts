@@ -5,15 +5,12 @@
 
 import * as localizedText from '../../shared/localizedText'
 import { getLogger } from '../../shared/logger'
-import { addCodiconToString } from '../../shared/utilities/textUtilities'
 import { localize } from '../../shared/utilities/vsCodeUtils'
 import { Commands } from '../../shared/vscode/commands'
 import { Window } from '../../shared/vscode/window'
 import { IotThingCertNode } from '../explorer/iotCertificateNode'
 import { showViewLogsMessage, showConfirmationMessage } from '../../shared/utilities/messages'
 import { IotThingNode } from '../explorer/iotThingNode'
-
-const DISPLAY_TIMEOUT_MS = 2000
 
 /**
  * Detaches a certificate from an IoT Thing.
@@ -55,10 +52,7 @@ export async function detachThingCertCommand(
         await node.iot.detachThingPrincipal({ thingName: thingName, principal: certArn })
 
         getLogger().info(`Successfully detached certificate from Thing ${thingName}`)
-        window.setStatusBarMessage(
-            addCodiconToString('trash', localize('AWS.iot.detachCert.success', 'Detached {0}', node.certificate.id)),
-            DISPLAY_TIMEOUT_MS
-        )
+        window.showInformationMessage(localize('AWS.iot.detachCert.success', 'Detached {0}', node.certificate.id))
     } catch (e) {
         getLogger().error(`Failed to detach certificate ${certId}: %O`, e)
         showViewLogsMessage(localize('AWS.iot.detachCert.error', 'Failed to detach {0}', node.certificate.id), window)
