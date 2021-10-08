@@ -571,7 +571,6 @@ export class MockS3Client implements S3Client {
 export class MockIotClient implements IotClient {
     public readonly regionCode: string
 
-    public readonly listAllThings: () => Promise<Iot.ThingAttribute[]>
     public readonly listThings: () => Promise<Iot.ListThingsResponse>
     public readonly createThing: (request: Iot.CreateThingRequest) => Promise<Iot.CreateThingResponse>
     public readonly deleteThing: (request: Iot.DeleteThingRequest) => Promise<void>
@@ -603,10 +602,10 @@ export class MockIotClient implements IotClient {
     public readonly createPolicyVersion: (request: Iot.CreatePolicyVersionRequest) => Promise<void>
     public readonly deletePolicyVersion: (request: Iot.DeletePolicyVersionRequest) => Promise<void>
     public readonly setDefaultPolicyVersion: (request: Iot.SetDefaultPolicyVersionRequest) => Promise<void>
+    public readonly listPolicyTargets: (request: Iot.ListTargetsForPolicyRequest) => Promise<string[]>
 
     public constructor({
         regionCode = '',
-        listAllThings = async () => [],
         listThings = async () => ({ things: [], nextToken: undefined }),
         createThing = async (request: Iot.CreateThingRequest) => ({ thingName: '', thingArn: '' }),
         deleteThing = async (request: Iot.DeleteThingRequest) => {},
@@ -649,9 +648,9 @@ export class MockIotClient implements IotClient {
         createPolicyVersion = async (request: Iot.CreatePolicyVersionRequest) => {},
         deletePolicyVersion = async (request: Iot.DeletePolicyVersionRequest) => {},
         setDefaultPolicyVersion = async (request: Iot.SetDefaultPolicyVersionRequest) => {},
+        listPolicyTargets = async (request: Iot.ListTargetsForPolicyRequest) => [],
     }: {
         regionCode?: string
-        listAllThings?(): Promise<Iot.ThingAttribute[]>
         listThings?(): Promise<Iot.ListThingsResponse>
         createThing?(request: Iot.CreateThingRequest): Promise<Iot.CreateThingResponse>
         deleteThing?(request: Iot.DeleteThingRequest): Promise<void>
@@ -677,9 +676,9 @@ export class MockIotClient implements IotClient {
         createPolicyVersion?(request: Iot.CreatePolicyVersionRequest): Promise<void>
         deletePolicyVersion?(request: Iot.DeletePolicyVersionRequest): Promise<void>
         setDefaultPolicyVersion?(request: Iot.SetDefaultPolicyVersionRequest): Promise<void>
+        listPolicyTargets?(request: Iot.ListTargetsForPolicyRequest): Promise<string[]>
     }) {
         this.regionCode = regionCode
-        this.listAllThings = listAllThings
         this.listThings = listThings
         this.createThing = createThing
         this.deleteThing = deleteThing
@@ -703,6 +702,7 @@ export class MockIotClient implements IotClient {
         this.createPolicyVersion = createPolicyVersion
         this.deletePolicyVersion = deletePolicyVersion
         this.setDefaultPolicyVersion = setDefaultPolicyVersion
+        this.listPolicyTargets = listPolicyTargets
     }
 }
 
